@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, Baby, Heart, BookOpen, Clock } from 'lucide-react'
+import { ChevronRight, Heart, BookOpen, Clock } from 'lucide-react'
 import { addChild, completeOnboarding } from '../utils/storage'
 import { CHILD_COLORS } from '../data/questions'
+import KidCharacter from '../components/KidCharacter'
 
 function WelcomeStep({ onNext }) {
   return (
-    <div className="flex flex-col items-center text-center px-6 py-12 page-enter">
-      <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-8">
-        <span className="text-5xl">📖</span>
+    <div className="flex flex-col items-center text-center px-6 py-10 page-enter">
+      {/* Drie groeipoppetjes als header */}
+      <div className="flex items-end justify-center gap-4 mb-6">
+        <KidCharacter phase="baby"    color="#E07845" width={48} />
+        <KidCharacter phase="kleuter" color="#5A9EA0" width={64} />
+        <KidCharacter phase="tiener"  color="#9B7EC8" width={48} />
       </div>
 
       <h1 className="text-3xl font-bold text-text-dark mb-3 leading-tight">
@@ -21,11 +25,11 @@ function WelcomeStep({ onNext }) {
         Minimale inspanning, maximaal resultaat.
       </p>
 
-      <div className="w-full max-w-xs space-y-4 mb-10">
+      <div className="w-full max-w-xs space-y-3 mb-10">
         {[
           { icon: BookOpen, text: '10 vragen per maand, wanneer het jou uitkomt', color: 'text-primary' },
-          { icon: Heart, text: 'Voor al je kinderen tegelijk', color: 'text-rose' },
-          { icon: Clock, text: 'Zie hoe je kinderen groeien — jaar na jaar', color: 'text-teal' },
+          { icon: Heart,    text: 'Voor al je kinderen tegelijk',                  color: 'text-rose' },
+          { icon: Clock,    text: 'Zie hoe je kinderen groeien — jaar na jaar',    color: 'text-teal' },
         ].map(({ icon: Icon, text, color }, i) => (
           <div key={i} className="flex items-start gap-3 bg-white rounded-2xl p-4 shadow-sm border border-border-light">
             <div className={`${color} mt-0.5 flex-shrink-0`}>
@@ -62,12 +66,20 @@ function AddChildStep({ onFinish }) {
 
   return (
     <div className="flex flex-col px-6 py-8 page-enter">
-      <div className="mb-8">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <Baby size={30} className="text-primary" />
+      <div className="mb-6">
+        {/* Poppetje dat meegroeit met de ingevoerde geboortedatum */}
+        <div className="flex items-center gap-4 mb-4">
+          <div
+            className="rounded-2xl flex items-end justify-center overflow-hidden flex-shrink-0"
+            style={{ width: 60, height: 72, backgroundColor: selectedColor + '22' }}
+          >
+            <KidCharacter birthdate={birthdate || undefined} color={selectedColor} width={42} />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-text-dark mb-1">Voeg je eerste kind toe</h2>
+            <p className="text-text-muted text-sm">Je kunt later meer kinderen toevoegen.</p>
+          </div>
         </div>
-        <h2 className="text-2xl font-bold text-text-dark mb-1">Voeg je eerste kind toe</h2>
-        <p className="text-text-muted text-sm">Je kunt later meer kinderen toevoegen.</p>
       </div>
 
       <div className="space-y-5">
@@ -111,14 +123,14 @@ function AddChildStep({ onFinish }) {
           </div>
         </div>
 
-        {/* Preview */}
+        {/* Preview kaart */}
         {name && (
           <div className="bg-white rounded-2xl p-4 border border-border-light flex items-center gap-4">
             <div
-              className="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0"
-              style={{ backgroundColor: selectedColor }}
+              className="rounded-2xl flex items-end justify-center overflow-hidden flex-shrink-0"
+              style={{ width: 56, height: 68, backgroundColor: selectedColor + '22' }}
             >
-              {name.charAt(0).toUpperCase()}
+              <KidCharacter birthdate={birthdate || undefined} color={selectedColor} width={40} />
             </div>
             <div>
               <p className="font-semibold text-text-dark">{name}</p>
@@ -155,7 +167,7 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto">
-      {/* Progress dots */}
+      {/* Voortgangsbollen */}
       <div className="flex justify-center gap-2 pt-6">
         {[0, 1].map(i => (
           <div
