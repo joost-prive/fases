@@ -1,226 +1,210 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, Gift, Sparkles, Settings } from 'lucide-react'
-import { getChildren } from '../utils/storage'
-import { getMonthCompletion } from '../utils/storage'
+import { BookOpen, Clock, ChevronRight, AlertCircle, Settings } from 'lucide-react'
+import { getChildren, getMonthCompletion } from '../utils/storage'
 import { getCurrentMonthName, getCurrentYear, getAgeText, isBirthMonth } from '../utils/ageUtils'
-import { filterQuestionsForAge, filterBirthdayQuestions } from '../utils/ageUtils'
-import { MONTHLY_QUESTIONS, BIRTHDAY_QUESTIONS, MONTHS } from '../data/questions'
+import { filterQuestionsForAge } from '../utils/ageUtils'
+import { MONTHLY_QUESTIONS, MONTHS } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
 
-function MonthSelector({ selectedMonth, selectedYear, onChange }) {
-  const currentYear = getCurrentYear()
-  const years = []
-  for (let y = currentYear; y >= currentYear - 5; y--) years.push(y)
+function ChildProgress({ child, month, year }) {
+  const questions = filterQuestionsForAge(MONTHLY_QUESTIONS[month] || [], child.birthdate, year, month)
+  const { filled, total } = getMonthCompletion(child.id, year, month, questions.length)
+  const pct = total > 0 ? Math.round((filled / total) * 100) : 0
 
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-      {MONTHS.map(month => (
-        <button
-          key={month}
-          onClick={() => onChange(month, selectedYear)}
-          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-            month === selectedMonth
-              ? 'bg-primary text-white shadow-sm'
-              : 'bg-white text-text-muted border border-border-light'
-          }`}
-        >
-          {month.slice(0, 3)}
-        </button>
-      ))}
+    <div className="flex items-center gap-3">
+      <ChildAvatar child={child} size="sm" />
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-sm font-medium text-text-dark">{child.name}</span>
+          <span className={`text-xs font-semibold ${pct === 100 ? 'text-green' : 'text-text-muted'}`}>
+            {pct === 100 ? '✓ Klaar' : `${filled}/${total}`}
+          </span>
+        </div>
+        <div className="h-1.5 bg-background rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${pct}%`, backgroundColor: pct === 100 ? '#6EA86A' : child.color }}
+          />
+        </div>
+      </div>
     </div>
   )
 }
 
-function ChildCard({ child, month, year }) {
-  const navigate = useNavigate()
-  const questions = filterQuestionsForAge(MONTHLY_QUESTIONS[month] || [], child.birthdate, year, month)
-  const { filled, total } = getMonthCompletion(child.id, year, month, questions.length)
-  const birthMonth = isBirthMonth(child.birthdate)
-  const pct = total > 0 ? Math.round((filled / total) * 100) : 0
-
-  return (
-    <div
-      className="bg-white rounded-3xl p-5 border border-border-light shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
-      onClick={() => navigate(`/vragen?childId=${child.id}&month=${month}&year=${year}`)}
-    >
-      <div className="flex items-center gap-4">
-        <ChildAvatar child={child} size="lg" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <h3 className="font-bold text-text-dark text-lg">{child.name}</h3>
-            {birthMonth && <Gift size={16} className="text-yellow flex-shrink-0" />}
-          </div>
-          <p className="text-text-muted text-sm">{getAgeText(child.birthdate)}</p>
-        </div>
-        <ChevronRight size={20} className="text-text-muted flex-shrink-0" />
-      </div>
-
-      {total > 0 ? (
-        <div className="mt-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs text-text-muted">{filled} van {total} vragen</span>
-            <span className={`text-xs font-semibold ${pct === 100 ? 'text-green' : 'text-primary'}`}>
-              {pct === 100 ? '✓ Klaar!' : `${pct}%`}
-            </span>
-          </div>
-          <div className="h-2 bg-background rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${pct}%`,
-                backgroundColor: pct === 100 ? '#6EA86A' : child.color || '#E07845'
-              }}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="mt-3 bg-background rounded-xl px-3 py-2">
-          <p className="text-xs text-text-muted">Geen vragen voor deze leeftijd deze maand</p>
-        </div>
-      )}
-
-      {birthMonth && (
-        <div className="mt-3 bg-yellow/10 rounded-xl px-3 py-2 flex items-center gap-2">
-          <Gift size={14} className="text-yellow" />
-          <p className="text-xs font-medium text-text-dark">Verjaardagsvragen beschikbaar!</p>
-        </div>
-      )}
-    </div>
-  )
+function getMissedMonths(children, currentMonth, currentYear) {
+  const currentIdx = MONTHS.indexOf(currentMonth)
+  const missed = []
+  for (let i = 1; i <= 3; i++) {
+    let idx = currentIdx - i
+    let year = currentYear
+    if (idx < 0) { idx += 12; year -= 1 }
+    const month = MONTHS[idx]
+    const hasUnanswered = children.some(child => {
+      const questions = filterQuestionsForAge(MONTHLY_QUESTIONS[month] || [], child.birthdate, year, month)
+      if (questions.length === 0) return false
+      const { filled, total } = getMonthCompletion(child.id, year, month, questions.length)
+      return filled < total
+    })
+    if (hasUnanswered) missed.push({ month, year })
+  }
+  return missed
 }
 
 export default function Home() {
   const navigate = useNavigate()
   const [children, setChildren] = useState([])
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthName())
-  const [selectedYear, setSelectedYear] = useState(getCurrentYear())
-
-  useEffect(() => {
-    setChildren(getChildren())
-  }, [])
-
+  const currentMonth = getCurrentMonthName()
   const currentYear = getCurrentYear()
-  const years = []
-  for (let y = currentYear; y >= currentYear - 5; y--) years.push(y)
+
+  useEffect(() => { setChildren(getChildren()) }, [])
+
+  const missedMonths = getMissedMonths(children, currentMonth, currentYear)
+  const hasBirthday = children.some(c => isBirthMonth(c.birthdate))
+
+  const totalFilled = children.reduce((acc, child) => {
+    const qs = filterQuestionsForAge(MONTHLY_QUESTIONS[currentMonth] || [], child.birthdate, currentYear, currentMonth)
+    const { filled } = getMonthCompletion(child.id, currentYear, currentMonth, qs.length)
+    return acc + filled
+  }, 0)
+  const totalPossible = children.reduce((acc, child) => {
+    const qs = filterQuestionsForAge(MONTHLY_QUESTIONS[currentMonth] || [], child.birthdate, currentYear, currentMonth)
+    return acc + qs.length
+  }, 0)
+  const allDone = totalPossible > 0 && totalFilled === totalPossible
 
   return (
     <div className="min-h-screen bg-background pb-24 page-enter">
       {/* Header */}
-      <div className="bg-white border-b border-border-light px-5 pt-12 pb-5">
-        <div className="flex items-start justify-between mb-4">
+      <div className="bg-white border-b border-border-light px-5 pt-12 pb-6">
+        <div className="flex items-start justify-between">
           <div>
             <p className="text-text-muted text-sm mb-0.5">Jouw maandboek</p>
-            <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
-              Fases <Sparkles size={20} className="text-yellow" />
-            </h1>
+            <h1 className="text-2xl font-bold text-text-dark">Fases</h1>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/kinderen')}
-              className="flex -space-x-2"
-            >
-              {children.slice(0, 3).map(child => (
-                <ChildAvatar key={child.id} child={child} size="sm" />
-              ))}
-              {children.length > 3 && (
-                <div className="w-8 h-8 rounded-full bg-border-light flex items-center justify-center text-xs font-bold text-text-muted border-2 border-white">
-                  +{children.length - 3}
-                </div>
-              )}
-            </button>
-            <button onClick={() => navigate('/instellingen')} className="text-text-muted p-1">
+            {children.length > 0 && (
+              <button onClick={() => navigate('/kinderen')} className="flex -space-x-2">
+                {children.slice(0, 3).map(child => (
+                  <ChildAvatar key={child.id} child={child} size="sm" />
+                ))}
+              </button>
+            )}
+            <button onClick={() => navigate('/instellingen')} className="text-text-muted p-1 ml-1">
               <Settings size={20} />
             </button>
           </div>
         </div>
-
-        {/* Month selector */}
-        <MonthSelector
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          onChange={(m) => setSelectedMonth(m)}
-        />
-
-        {/* Year selector */}
-        <div className="flex gap-2 mt-2 overflow-x-auto scrollbar-hide">
-          {years.map(y => (
-            <button
-              key={y}
-              onClick={() => setSelectedYear(y)}
-              className={`flex-shrink-0 px-3 py-1 rounded-full text-sm font-medium transition-all ${
-                y === selectedYear
-                  ? 'bg-text-dark text-white'
-                  : 'text-text-muted'
-              }`}
-            >
-              {y}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Content */}
-      <div className="px-5 py-5">
+      <div className="px-5 py-6 space-y-4">
         {children.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-4xl mb-4">👶</p>
-            <p className="font-semibold text-text-dark mb-2">Nog geen kinderen</p>
-            <p className="text-text-muted text-sm mb-6">Voeg je eerste kind toe om te beginnen</p>
+          <div className="text-center py-12">
+            <p className="text-5xl mb-4">📖</p>
+            <p className="font-bold text-text-dark text-lg mb-2">Welkom bij Fases!</p>
+            <p className="text-text-muted text-sm mb-6 leading-relaxed max-w-xs mx-auto">
+              Leg in een paar minuten per maand de mooiste momenten van je gezin vast.
+            </p>
             <button
               onClick={() => navigate('/kinderen')}
-              className="bg-primary text-white font-semibold px-6 py-3 rounded-2xl"
+              className="bg-primary text-white font-semibold px-6 py-3 rounded-2xl shadow-md"
             >
-              Kind toevoegen
+              Eerste kind toevoegen
             </button>
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-text-dark text-lg">
-                {selectedMonth} {selectedYear}
-              </h2>
-              <span className="text-text-muted text-sm">{children.length} kind{children.length !== 1 ? 'eren' : ''}</span>
-            </div>
-
-            <div className="space-y-4">
-              {children.map(child => (
-                <ChildCard
-                  key={child.id}
-                  child={child}
-                  month={selectedMonth}
-                  year={selectedYear}
-                />
-              ))}
-            </div>
-
-            {/* Birthday section */}
-            {children.some(c => isBirthMonth(c.birthdate)) && (
-              <div className="mt-6">
-                <h2 className="font-bold text-text-dark text-lg mb-3 flex items-center gap-2">
-                  <Gift size={20} className="text-yellow" /> Verjaardagsvragen
-                </h2>
-                <div className="space-y-3">
-                  {children.filter(c => isBirthMonth(c.birthdate)).map(child => {
-                    const bqs = filterBirthdayQuestions(BIRTHDAY_QUESTIONS, child.birthdate, selectedYear)
-                    return (
-                      <div
-                        key={child.id}
-                        className="bg-yellow/10 border border-yellow/30 rounded-3xl p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
-                        onClick={() => navigate(`/verjaardag?childId=${child.id}&year=${selectedYear}`)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <ChildAvatar child={child} size="md" />
-                          <div>
-                            <p className="font-semibold text-text-dark">{child.name}</p>
-                            <p className="text-sm text-text-muted">{bqs.length} verjaardagsvragen</p>
-                          </div>
-                        </div>
-                        <ChevronRight size={20} className="text-text-muted" />
-                      </div>
-                    )
-                  })}
+            {/* OPTIE 1 — Vragen invullen */}
+            <div
+              className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+              onClick={() => navigate(`/vragen?month=${currentMonth}&year=${currentYear}`)}
+            >
+              <div className="px-5 pt-5 pb-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <BookOpen size={22} className="text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-bold text-text-dark text-base">Vragen invullen</h2>
+                      <ChevronRight size={18} className="text-text-muted" />
+                    </div>
+                    <p className="text-text-muted text-sm mt-0.5">
+                      {allDone ? `${currentMonth} is helemaal klaar 🎉` : `De vragen van ${currentMonth} staan klaar`}
+                    </p>
+                  </div>
                 </div>
+                <div className="mt-4 space-y-3">
+                  {children.map(child => (
+                    <ChildProgress key={child.id} child={child} month={currentMonth} year={currentYear} />
+                  ))}
+                </div>
+              </div>
+              {allDone && (
+                <div className="bg-green/10 border-t border-green/20 px-5 py-2.5">
+                  <p className="text-xs font-medium text-green">✓ Alle vragen voor {currentMonth} zijn ingevuld</p>
+                </div>
+              )}
+            </div>
+
+            {/* Verjaardag banner */}
+            {hasBirthday && (
+              <div
+                className="bg-yellow/10 border border-yellow/30 rounded-3xl px-5 py-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
+                onClick={() => navigate(`/verjaardag?childId=${children.find(c => isBirthMonth(c.birthdate))?.id}&year=${currentYear}`)}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🎂</span>
+                  <div>
+                    <p className="font-bold text-text-dark text-sm">Verjaardagsvragen!</p>
+                    <p className="text-xs text-text-muted">
+                      {children.filter(c => isBirthMonth(c.birthdate)).map(c => c.name).join(' & ')} is jarig deze maand
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-text-muted" />
+              </div>
+            )}
+
+            {/* OPTIE 2 — Tijdreis */}
+            <div
+              className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+              onClick={() => navigate('/tijdreis')}
+            >
+              <div className="px-5 py-5 flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-teal/10 flex items-center justify-center flex-shrink-0">
+                  <Clock size={22} className="text-teal" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-bold text-text-dark text-base">Tijdreis bekijken</h2>
+                    <ChevronRight size={18} className="text-text-muted" />
+                  </div>
+                  <p className="text-text-muted text-sm mt-0.5 leading-snug">
+                    Blader door eerdere antwoorden en zie hoe {children.length > 1 ? 'jullie kinderen groeien' : `${children[0]?.name} groeit`}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Achterstand: gemiste maanden */}
+            {missedMonths.length > 0 && (
+              <div className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden">
+                <div className="px-5 pt-4 pb-3 flex items-center gap-2">
+                  <AlertCircle size={16} className="text-yellow flex-shrink-0" />
+                  <p className="text-sm font-semibold text-text-dark">Eerdere maanden nog in te vullen</p>
+                </div>
+                {missedMonths.map(({ month, year }) => (
+                  <button
+                    key={`${month}-${year}`}
+                    className="w-full flex items-center justify-between px-5 py-3 border-t border-border-light text-left active:bg-background"
+                    onClick={() => navigate(`/vragen?month=${month}&year=${year}`)}
+                  >
+                    <span className="text-sm text-text-dark font-medium">{month} {year}</span>
+                    <ChevronRight size={16} className="text-text-muted" />
+                  </button>
+                ))}
               </div>
             )}
           </>
