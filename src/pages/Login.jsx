@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import KidCharacter from '../components/KidCharacter'
+import AppLogo from '../components/AppLogo'
 import {
   loginWithEmail,
   registerWithEmail,
@@ -86,15 +87,15 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5 py-12">
-      {/* Karakters + header */}
-      <div className="mb-8 text-center">
-        <div className="flex items-end justify-center gap-3 mb-4">
+      {/* Logo + karakters + header */}
+      <div className="mb-8 text-center flex flex-col items-center">
+        <div className="flex items-end justify-center gap-3 mb-5">
           <KidCharacter phase="baby"       color="#E07845" width={44} />
           <KidCharacter phase="kleuter"    color="#5A9EA0" width={58} />
           <KidCharacter phase="schoolkind" color="#9B7EC8" width={44} />
         </div>
-        <h1 className="text-3xl font-bold text-text-dark">Fases</h1>
-        <p className="text-text-muted text-sm mt-1">Jouw maandboek voor je gezin</p>
+        <AppLogo size={40} withText className="justify-center mb-1" />
+        <p className="text-text-muted text-sm">Jouw maandboek voor je gezin</p>
       </div>
 
       <div className="w-full max-w-sm">

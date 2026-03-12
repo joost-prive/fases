@@ -38,10 +38,11 @@ export async function initUserData(userId) {
   }
 }
 
-// Reset bij uitloggen
+// Reset bij uitloggen — ook localStorage leegmaken zodat een volgend account niet dezelfde data ziet
 export function clearUserData() {
   cache = null
   currentUserId = null
+  localStorage.removeItem(LOCAL_KEY)
 }
 
 // Interne helper: sla op in cache + localStorage + Firestore (async, fire-and-forget)

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { isOnboardingComplete } from './utils/storage'
 import Navigation from './components/Navigation'
+import AppLogo from './components/AppLogo'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
 import Home from './pages/Home'
@@ -16,9 +17,9 @@ import Settings from './pages/Settings'
 function LoadingScreen() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center">
-        <p className="text-4xl mb-3">📖</p>
-        <p className="text-text-muted text-sm">Fases laden…</p>
+      <div className="text-center flex flex-col items-center gap-3">
+        <AppLogo size={48} />
+        <p className="text-text-muted text-sm">Laden…</p>
       </div>
     </div>
   )

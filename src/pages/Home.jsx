@@ -6,6 +6,7 @@ import { getCurrentMonthName, getCurrentYear, getAgeText, isBirthMonth } from '.
 import { filterQuestionsForAge } from '../utils/ageUtils'
 import { MONTHLY_QUESTIONS, MONTHS } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
+import AppLogo from '../components/AppLogo'
 
 function ChildProgress({ child, month, year }) {
   const questions = filterQuestionsForAge(MONTHLY_QUESTIONS[month] || [], child.birthdate, year, month)
@@ -79,9 +80,12 @@ export default function Home() {
       {/* Header */}
       <div className="bg-white border-b border-border-light px-5 pt-12 pb-6">
         <div className="flex items-start justify-between">
-          <div>
-            <p className="text-text-muted text-sm mb-0.5">Jouw maandboek</p>
-            <h1 className="text-2xl font-bold text-text-dark">Fases</h1>
+          <div className="flex items-center gap-2.5">
+            <AppLogo size={34} />
+            <div>
+              <p className="text-text-muted text-xs mb-0">Jouw maandboek</p>
+              <h1 className="text-xl font-bold text-text-dark leading-tight">Fases</h1>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {children.length > 0 && (
@@ -100,8 +104,8 @@ export default function Home() {
 
       <div className="px-5 py-6 space-y-4">
         {children.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-5xl mb-4">📖</p>
+          <div className="text-center py-12 flex flex-col items-center">
+            <AppLogo size={56} className="mb-4" />
             <p className="font-bold text-text-dark text-lg mb-2">Welkom bij Fases!</p>
             <p className="text-text-muted text-sm mb-6 leading-relaxed max-w-xs mx-auto">
               Leg in een paar minuten per maand de mooiste momenten van je gezin vast.
