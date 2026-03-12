@@ -198,6 +198,41 @@ export function removeMeasurement(childId, id) {
   persist(data)
 }
 
+// ─── Foto-URL's ───────────────────────────────────────────────────────────────
+// Maandfoto: data.answers[childId].photos.monthly[year][month] = url
+
+export function getMonthPhotoUrl(childId, year, month) {
+  const data = getData()
+  return data.answers[childId]?.photos?.monthly?.[year]?.[month] || null
+}
+
+export function saveMonthPhotoUrl(childId, year, month, url) {
+  const data = getData()
+  if (!data.answers[childId]) data.answers[childId] = {}
+  const a = data.answers[childId]
+  if (!a.photos) a.photos = {}
+  if (!a.photos.monthly) a.photos.monthly = {}
+  if (!a.photos.monthly[year]) a.photos.monthly[year] = {}
+  a.photos.monthly[year][month] = url
+  persist(data)
+}
+
+export function clearMonthPhotoUrl(childId, year, month) {
+  const data = getData()
+  if (!data.answers[childId]?.photos?.monthly?.[year]) return
+  delete data.answers[childId].photos.monthly[year][month]
+  persist(data)
+}
+
+// Profielfoto: opgeslagen op child-object zelf (child.photo = url)
+export function saveChildPhotoUrl(childId, url) {
+  updateChild(childId, { photo: url })
+}
+
+export function clearChildPhotoUrl(childId) {
+  updateChild(childId, { photo: null })
+}
+
 // Settings
 export function getSettings() {
   return getData().settings

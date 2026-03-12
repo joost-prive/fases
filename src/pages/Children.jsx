@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit3, X, Check, Users } from 'lucide-react'
-import { getChildren, addChild, updateChild, removeChild } from '../utils/storage'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, Trash2, Edit3, X, Check, Users, Camera, Loader2 } from 'lucide-react'
+import { getChildren, addChild, updateChild, removeChild, saveChildPhotoUrl, clearChildPhotoUrl } from '../utils/storage'
+import { uploadProfilePhoto, deleteProfilePhoto } from '../utils/photoService'
+import { useAuth } from '../contexts/AuthContext'
 import { getAgeText, formatBirthdate } from '../utils/ageUtils'
 import { CHILD_COLORS } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
@@ -94,13 +96,79 @@ function AddChildModal({ onClose, onSave }) {
   )
 }
 
-function ChildCard({ child, onEdit, onDelete }) {
+function ChildCard({ child, onEdit, onDelete, onRefresh }) {
+  const { user } = useAuth()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [photoLoading, setPhotoLoading] = useState(false)
+  const photoInputRef = useRef(null)
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    if (file.size > 15 * 1024 * 1024) return
+    setPhotoLoading(true)
+    try {
+      const url = await uploadProfilePhoto(user.uid, child.id, file)
+      saveChildPhotoUrl(child.id, url)
+      onRefresh?.()
+    } catch (err) {
+      console.error('Foto uploaden mislukt', err)
+    } finally {
+      setPhotoLoading(false)
+      e.target.value = ''
+    }
+  }
+
+  const handlePhotoDelete = async () => {
+    if (!user) return
+    setPhotoLoading(true)
+    try {
+      await deleteProfilePhoto(user.uid, child.id)
+      clearChildPhotoUrl(child.id)
+      onRefresh?.()
+    } catch (err) {
+      console.error('Foto verwijderen mislukt', err)
+    } finally {
+      setPhotoLoading(false)
+    }
+  }
 
   return (
     <div className="bg-white rounded-3xl border border-border-light p-5 shadow-sm">
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handlePhotoUpload}
+      />
       <div className="flex items-center gap-4">
-        <ChildAvatar child={child} size="lg" />
+        {/* Avatar met camera-overlay */}
+        <div className="relative flex-shrink-0">
+          <ChildAvatar child={child} size="lg" />
+          {photoLoading ? (
+            <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+              <Loader2 size={18} className="text-white animate-spin" />
+            </div>
+          ) : (
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-sm"
+              title={child.photo ? 'Foto wijzigen' : 'Foto toevoegen'}
+            >
+              <Camera size={12} className="text-white" />
+            </button>
+          )}
+          {child.photo && !photoLoading && (
+            <button
+              onClick={handlePhotoDelete}
+              className="absolute top-0 right-0 w-5 h-5 rounded-full bg-rose flex items-center justify-center shadow-sm"
+              title="Foto verwijderen"
+            >
+              <X size={9} className="text-white" />
+            </button>
+          )}
+        </div>
         <div className="flex-1 min-w-0">
           <p className="font-bold text-text-dark text-lg">{child.name}</p>
           <p className="text-text-muted text-sm">{getAgeText(child.birthdate)}</p>
@@ -193,6 +261,7 @@ export default function Children() {
                 child={child}
                 onEdit={setEditChild}
                 onDelete={handleDelete}
+                onRefresh={refresh}
               />
             ))}
           </div>

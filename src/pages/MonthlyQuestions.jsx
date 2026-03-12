@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useParams } from 'react-router-dom'
 import { ChevronDown, ChevronUp, Check } from 'lucide-react'
-import { getChildren, getAnswer, saveAnswer, getMonthAnswersAllYears } from '../utils/storage'
+import { getChildren, getAnswer, saveAnswer, getMonthAnswersAllYears, getMonthPhotoUrl, saveMonthPhotoUrl, clearMonthPhotoUrl } from '../utils/storage'
+import { uploadMonthPhoto, deleteMonthPhoto } from '../utils/photoService'
+import { useAuth } from '../contexts/AuthContext'
 import { filterQuestionsForAge, getCurrentMonthName, getCurrentYear } from '../utils/ageUtils'
 import { MONTHLY_QUESTIONS, MONTHS } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
+import PhotoUpload from '../components/PhotoUpload'
 
 function PreviousAnswers({ childId, month, questionId, currentYear }) {
   const allYears = getMonthAnswersAllYears(childId, month)
@@ -67,6 +70,44 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
           <PreviousAnswers childId={childId} month={month} questionId={question.id} currentYear={year} />
         </div>
       )}
+    </div>
+  )
+}
+
+// ─── Foto van de maand ────────────────────────────────────────────────────────
+function MonthPhoto({ childId, year, month }) {
+  const { user } = useAuth()
+  const [url, setUrl] = useState(() => getMonthPhotoUrl(childId, year, month))
+
+  // Herstel URL als kind/maand/jaar verandert
+  useEffect(() => {
+    setUrl(getMonthPhotoUrl(childId, year, month))
+  }, [childId, year, month])
+
+  const handleUpload = async (file) => {
+    const downloadUrl = await uploadMonthPhoto(user.uid, childId, year, month, file)
+    saveMonthPhotoUrl(childId, year, month, downloadUrl)
+    setUrl(downloadUrl)
+  }
+
+  const handleDelete = async () => {
+    await deleteMonthPhoto(user.uid, childId, year, month)
+    clearMonthPhotoUrl(childId, year, month)
+    setUrl(null)
+  }
+
+  return (
+    <div className="mb-3">
+      <p className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
+        📷 Foto van de maand
+      </p>
+      <PhotoUpload
+        url={url}
+        onUpload={handleUpload}
+        onDelete={handleDelete}
+        aspectRatio="aspect-[4/3]"
+        emptyLabel="Foto toevoegen"
+      />
     </div>
   )
 }
@@ -183,6 +224,15 @@ export default function MonthlyQuestions() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Foto van de maand (altijd zichtbaar als er een kind geselecteerd is) */}
+        {selectedChild && (
+          <MonthPhoto
+            childId={selectedChildId}
+            year={selectedYear}
+            month={selectedMonth}
+          />
         )}
 
         {questions.length === 0 ? (
