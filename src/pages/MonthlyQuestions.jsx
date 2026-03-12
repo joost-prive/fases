@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useParams } from 'react-router-dom'
-import { ChevronDown, ChevronUp, Check } from 'lucide-react'
-import { getChildren, getAnswer, saveAnswer, getMonthAnswersAllYears, getMonthPhotoUrl, saveMonthPhotoUrl, clearMonthPhotoUrl } from '../utils/storage'
-import { uploadMonthPhoto, deleteMonthPhoto } from '../utils/photoService'
+import { ChevronDown, ChevronUp, Check, Camera, X, Loader2 } from 'lucide-react'
+import {
+  getChildren, getAnswer, saveAnswer, getMonthAnswersAllYears,
+  getQuestionPhotoUrl, saveQuestionPhotoUrl, clearQuestionPhotoUrl,
+} from '../utils/storage'
+import { uploadQuestionPhoto } from '../utils/photoService'
 import { useAuth } from '../contexts/AuthContext'
 import { filterQuestionsForAge, getCurrentMonthName, getCurrentYear } from '../utils/ageUtils'
 import { MONTHLY_QUESTIONS, MONTHS } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
-import PhotoUpload from '../components/PhotoUpload'
 
+// ─── Vorige-jaren antwoorden ──────────────────────────────────────────────────
 function PreviousAnswers({ childId, month, questionId, currentYear }) {
   const allYears = getMonthAnswersAllYears(childId, month)
   const entries = Object.entries(allYears)
@@ -28,6 +31,106 @@ function PreviousAnswers({ childId, month, questionId, currentYear }) {
   )
 }
 
+// ─── Compact foto-rij per vraag ───────────────────────────────────────────────
+function QuestionPhotoRow({ childId, year, month, questionId }) {
+  const { user } = useAuth()
+  const inputRef = useRef(null)
+  const [url, setUrl] = useState(() => getQuestionPhotoUrl(childId, year, month, questionId))
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  // Sync bij wisselen van vraag/maand/jaar/kind
+  useEffect(() => {
+    setUrl(getQuestionPhotoUrl(childId, year, month, questionId))
+    setError('')
+  }, [childId, year, month, questionId])
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    if (file.size > 15 * 1024 * 1024) { setError('Max 15 MB'); return }
+    setLoading(true)
+    setError('')
+    try {
+      const downloadUrl = await uploadQuestionPhoto(user.uid, childId, year, month, questionId, file)
+      saveQuestionPhotoUrl(childId, year, month, questionId, downloadUrl)
+      setUrl(downloadUrl)
+    } catch (err) {
+      setError('Upload mislukt')
+      console.error(err)
+    } finally {
+      setLoading(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleDelete = () => {
+    clearQuestionPhotoUrl(childId, year, month, questionId)
+    setUrl(null)
+  }
+
+  return (
+    <div className="mt-3">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {url ? (
+        /* Thumbnail met vervang- en verwijder-knop */
+        <div className="relative inline-block">
+          <img
+            src={url}
+            alt="Foto bij vraag"
+            className="h-28 w-auto rounded-xl object-cover"
+          />
+          {loading && (
+            <div className="absolute inset-0 rounded-xl bg-black/40 flex items-center justify-center">
+              <Loader2 size={18} className="text-white animate-spin" />
+            </div>
+          )}
+          {!loading && (
+            <>
+              <button
+                onClick={() => inputRef.current?.click()}
+                className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/55 flex items-center justify-center"
+                title="Foto vervangen"
+              >
+                <Camera size={12} className="text-white" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/55 flex items-center justify-center"
+                title="Foto verwijderen"
+              >
+                <X size={12} className="text-white" />
+              </button>
+            </>
+          )}
+        </div>
+      ) : (
+        /* Subtiele upload-knop */
+        <button
+          onClick={() => inputRef.current?.click()}
+          disabled={loading}
+          className="flex items-center gap-1.5 text-xs text-text-muted hover:text-primary transition-colors disabled:opacity-50"
+        >
+          {loading
+            ? <Loader2 size={13} className="animate-spin" />
+            : <Camera size={13} />}
+          <span>Foto toevoegen</span>
+        </button>
+      )}
+
+      {error && <p className="mt-1 text-xs text-rose">{error}</p>}
+    </div>
+  )
+}
+
+// ─── Vraagkaart ───────────────────────────────────────────────────────────────
 function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
   const [value, setValue] = useState('')
 
@@ -41,6 +144,7 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
   }
 
   const hasAnswer = value.trim().length > 0
+  const hasPhoto  = !!getQuestionPhotoUrl(childId, year, month, question.id)
 
   return (
     <div className={`bg-white rounded-2xl border transition-all overflow-hidden ${isOpen ? 'border-primary shadow-sm' : 'border-border-light'}`}>
@@ -53,10 +157,15 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
         <p className={`flex-1 text-sm leading-snug font-medium ${isOpen ? 'text-primary' : 'text-text-dark'}`}>
           {question.question}
         </p>
-        <div className="text-text-muted flex-shrink-0 mt-0.5">
-          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
+          {/* Camera-icoontje als er al een foto is (ingeklapt) */}
+          {hasPhoto && !isOpen && (
+            <Camera size={13} className="text-text-muted" />
+          )}
+          {isOpen ? <ChevronUp size={16} className="text-text-muted" /> : <ChevronDown size={16} className="text-text-muted" />}
         </div>
       </button>
+
       {isOpen && (
         <div className="px-4 pb-4">
           <textarea
@@ -67,6 +176,12 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
             autoFocus
             className="w-full border border-border-light rounded-xl px-3 py-2.5 text-sm text-text-dark placeholder-text-muted focus:outline-none focus:border-primary bg-background resize-none"
           />
+          <QuestionPhotoRow
+            childId={childId}
+            year={year}
+            month={month}
+            questionId={question.id}
+          />
           <PreviousAnswers childId={childId} month={month} questionId={question.id} currentYear={year} />
         </div>
       )}
@@ -74,44 +189,7 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
   )
 }
 
-// ─── Foto van de maand ────────────────────────────────────────────────────────
-function MonthPhoto({ childId, year, month }) {
-  const { user } = useAuth()
-  const [url, setUrl] = useState(() => getMonthPhotoUrl(childId, year, month))
-
-  // Herstel URL als kind/maand/jaar verandert
-  useEffect(() => {
-    setUrl(getMonthPhotoUrl(childId, year, month))
-  }, [childId, year, month])
-
-  const handleUpload = async (file) => {
-    const downloadUrl = await uploadMonthPhoto(user.uid, childId, year, month, file)
-    saveMonthPhotoUrl(childId, year, month, downloadUrl)
-    setUrl(downloadUrl)
-  }
-
-  const handleDelete = async () => {
-    await deleteMonthPhoto(user.uid, childId, year, month)
-    clearMonthPhotoUrl(childId, year, month)
-    setUrl(null)
-  }
-
-  return (
-    <div className="mb-3">
-      <p className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
-        📷 Foto van de maand
-      </p>
-      <PhotoUpload
-        url={url}
-        onUpload={handleUpload}
-        onDelete={handleDelete}
-        aspectRatio="aspect-[4/3]"
-        emptyLabel="Foto toevoegen"
-      />
-    </div>
-  )
-}
-
+// ─── Hoofdpagina ──────────────────────────────────────────────────────────────
 export default function MonthlyQuestions() {
   const [params, setParams] = useSearchParams()
   const { month: monthParam } = useParams()
@@ -224,15 +302,6 @@ export default function MonthlyQuestions() {
               </div>
             </div>
           </div>
-        )}
-
-        {/* Foto van de maand (altijd zichtbaar als er een kind geselecteerd is) */}
-        {selectedChild && (
-          <MonthPhoto
-            childId={selectedChildId}
-            year={selectedYear}
-            month={selectedMonth}
-          />
         )}
 
         {questions.length === 0 ? (

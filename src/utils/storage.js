@@ -199,28 +199,29 @@ export function removeMeasurement(childId, id) {
 }
 
 // ─── Foto-URL's ───────────────────────────────────────────────────────────────
-// Maandfoto: data.answers[childId].photos.monthly[year][month] = url
+// Per vraag: data.answers[childId].photos.questions[year][month][questionId] = url
 
-export function getMonthPhotoUrl(childId, year, month) {
+export function getQuestionPhotoUrl(childId, year, month, questionId) {
   const data = getData()
-  return data.answers[childId]?.photos?.monthly?.[year]?.[month] || null
+  return data.answers[childId]?.photos?.questions?.[year]?.[month]?.[questionId] || null
 }
 
-export function saveMonthPhotoUrl(childId, year, month, url) {
+export function saveQuestionPhotoUrl(childId, year, month, questionId, url) {
   const data = getData()
   if (!data.answers[childId]) data.answers[childId] = {}
   const a = data.answers[childId]
   if (!a.photos) a.photos = {}
-  if (!a.photos.monthly) a.photos.monthly = {}
-  if (!a.photos.monthly[year]) a.photos.monthly[year] = {}
-  a.photos.monthly[year][month] = url
+  if (!a.photos.questions) a.photos.questions = {}
+  if (!a.photos.questions[year]) a.photos.questions[year] = {}
+  if (!a.photos.questions[year][month]) a.photos.questions[year][month] = {}
+  a.photos.questions[year][month][questionId] = url
   persist(data)
 }
 
-export function clearMonthPhotoUrl(childId, year, month) {
+export function clearQuestionPhotoUrl(childId, year, month, questionId) {
   const data = getData()
-  if (!data.answers[childId]?.photos?.monthly?.[year]) return
-  delete data.answers[childId].photos.monthly[year][month]
+  if (!data.answers[childId]?.photos?.questions?.[year]?.[month]) return
+  delete data.answers[childId].photos.questions[year][month][questionId]
   persist(data)
 }
 

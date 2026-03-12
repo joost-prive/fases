@@ -28,20 +28,15 @@ async function uploadToCloudinary(file, publicId) {
   return data.secure_url
 }
 
-// ─── Maandfoto ────────────────────────────────────────────────────────────────
-// Elke upload krijgt een unieke public_id via timestamp, zodat de URL altijd
-// verwijst naar de juiste foto. De URL wordt opgeslagen in Firestore/localStorage.
+// ─── Vraagfoto ────────────────────────────────────────────────────────────────
+// Elke upload krijgt een unieke public_id via timestamp; de URL wordt opgeslagen
+// in Firestore/localStorage. Cloudinary-delete vereist server-side signing, dus
+// verwijdering verwijdert alleen de URL — de foto in Cloudinary blijft staan maar
+// wordt nooit meer weergegeven. Binnen 25 GB is dit geen probleem.
 
-export async function uploadMonthPhoto(_userId, childId, year, month, file) {
-  const publicId = `${childId}_${year}_${month}_${Date.now()}`
+export async function uploadQuestionPhoto(_userId, childId, year, month, questionId, file) {
+  const publicId = `${childId}_${year}_${month}_q${questionId}_${Date.now()}`
   return await uploadToCloudinary(file, publicId)
-}
-
-// Cloudinary-verwijdering vereist server-side signing (API secret).
-// We verwijderen alleen de URL uit de database; de foto blijft in Cloudinary
-// maar wordt nooit meer weergegeven. Binnen 25 GB is dit geen probleem.
-export async function deleteMonthPhoto() {
-  // no-op — URL wordt verwijderd via clearMonthPhotoUrl in storage.js
 }
 
 // ─── Profielfoto ──────────────────────────────────────────────────────────────
