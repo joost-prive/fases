@@ -163,6 +163,41 @@ export function getMonthCompletion(childId, year, month, totalQuestions) {
   return { filled, total: totalQuestions }
 }
 
+// ─── Groeimetingen (datum + lengte + gewicht) ─────────────────────────────────
+// Opgeslagen als data.answers[childId].measurements = [{ id, date, height, weight }]
+
+export function getMeasurements(childId) {
+  const data = getData()
+  const measurements = data.answers[childId]?.measurements || []
+  return [...measurements].sort((a, b) => new Date(a.date) - new Date(b.date))
+}
+
+export function addMeasurement(childId, { date, height, weight }) {
+  const data = getData()
+  if (!data.answers[childId]) data.answers[childId] = {}
+  if (!data.answers[childId].measurements) data.answers[childId].measurements = []
+  const newM = { id: crypto.randomUUID(), date, height, weight }
+  data.answers[childId].measurements.push(newM)
+  persist(data)
+  return newM
+}
+
+export function updateMeasurement(childId, id, updates) {
+  const data = getData()
+  if (!data.answers[childId]?.measurements) return
+  data.answers[childId].measurements = data.answers[childId].measurements.map(m =>
+    m.id === id ? { ...m, ...updates } : m
+  )
+  persist(data)
+}
+
+export function removeMeasurement(childId, id) {
+  const data = getData()
+  if (!data.answers[childId]?.measurements) return
+  data.answers[childId].measurements = data.answers[childId].measurements.filter(m => m.id !== id)
+  persist(data)
+}
+
 // Settings
 export function getSettings() {
   return getData().settings
