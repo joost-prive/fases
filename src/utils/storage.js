@@ -1,4 +1,7 @@
-const STORAGE_KEY = 'fases_data'
+import { db } from '../firebase'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
+
+const LOCAL_KEY = 'fases_data'
 
 const defaultData = {
   children: [],
@@ -10,9 +13,52 @@ const defaultData = {
   },
 }
 
-export function getData() {
+// In-memory cache — sneller dan localStorage, gesynchroniseerd met Firestore
+let cache = null
+let currentUserId = null
+
+// Laad data van Firestore bij inloggen. Migreert localStorage-data als eerste login.
+export async function initUserData(userId) {
+  currentUserId = userId
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const snap = await getDoc(doc(db, 'users', userId))
+    if (snap.exists()) {
+      cache = { ...defaultData, ...snap.data() }
+    } else {
+      // Eerste keer inloggen: bestaande localStorage-data overnemen
+      const local = localStorage.getItem(LOCAL_KEY)
+      cache = local ? { ...defaultData, ...JSON.parse(local) } : { ...defaultData }
+      await setDoc(doc(db, 'users', userId), cache)
+    }
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(cache))
+  } catch (e) {
+    console.warn('Firestore laden mislukt, gebruik localStorage', e)
+    const local = localStorage.getItem(LOCAL_KEY)
+    cache = local ? { ...defaultData, ...JSON.parse(local) } : { ...defaultData }
+  }
+}
+
+// Reset bij uitloggen
+export function clearUserData() {
+  cache = null
+  currentUserId = null
+}
+
+// Interne helper: sla op in cache + localStorage + Firestore (async, fire-and-forget)
+function persist(data) {
+  cache = data
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(data))
+  if (currentUserId) {
+    setDoc(doc(db, 'users', currentUserId), data).catch(e =>
+      console.warn('Firestore sync mislukt', e)
+    )
+  }
+}
+
+export function getData() {
+  if (cache) return cache
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY)
     if (!raw) return { ...defaultData }
     return { ...defaultData, ...JSON.parse(raw) }
   } catch {
@@ -21,7 +67,7 @@ export function getData() {
 }
 
 export function saveData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  persist(data)
 }
 
 // Children
@@ -33,21 +79,21 @@ export function addChild(child) {
   const data = getData()
   const newChild = { ...child, id: crypto.randomUUID() }
   data.children.push(newChild)
-  saveData(data)
+  persist(data)
   return newChild
 }
 
 export function updateChild(id, updates) {
   const data = getData()
   data.children = data.children.map(c => c.id === id ? { ...c, ...updates } : c)
-  saveData(data)
+  persist(data)
 }
 
 export function removeChild(id) {
   const data = getData()
   data.children = data.children.filter(c => c.id !== id)
   delete data.answers[id]
-  saveData(data)
+  persist(data)
 }
 
 // Answers
@@ -94,7 +140,7 @@ export function saveAnswer(childId, type, year, month, questionId, value) {
     a.stats[year][questionId] = value
   }
 
-  saveData(data)
+  persist(data)
 }
 
 // Get all answers for a child in a specific month across all years
@@ -124,7 +170,7 @@ export function getSettings() {
 export function saveSettings(settings) {
   const data = getData()
   data.settings = { ...data.settings, ...settings }
-  saveData(data)
+  persist(data)
 }
 
 export function isOnboardingComplete() {

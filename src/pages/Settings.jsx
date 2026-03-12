@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import { Settings as SettingsIcon, Bell, Trash2, Download, Info } from 'lucide-react'
+import { useState } from 'react'
+import { Settings as SettingsIcon, Bell, Trash2, Download, Info, LogOut } from 'lucide-react'
 import { getSettings, saveSettings, getData } from '../utils/storage'
+import { logout } from '../utils/authService'
+import { useAuth } from '../contexts/AuthContext'
 
 function Toggle({ checked, onChange }) {
   return (
@@ -26,6 +28,7 @@ function SettingRow({ label, description, children }) {
 }
 
 export default function Settings() {
+  const { user } = useAuth()
   const [settings, setSettings] = useState(getSettings())
   const [exportDone, setExportDone] = useState(false)
   const [clearConfirm, setClearConfirm] = useState(false)
@@ -171,6 +174,25 @@ export default function Settings() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Account */}
+        <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <LogOut size={18} className="text-text-muted" />
+            <h2 className="font-bold text-text-dark">Account</h2>
+          </div>
+          {user && (
+            <p className="text-sm text-text-muted mb-3">
+              Ingelogd als <span className="font-medium text-text-dark">{user.displayName || user.email}</span>
+            </p>
+          )}
+          <button
+            onClick={() => logout()}
+            className="w-full py-3 rounded-2xl text-sm font-semibold bg-background text-text-dark border border-border-light active:bg-border-light"
+          >
+            Uitloggen
+          </button>
         </div>
 
         {/* About */}
