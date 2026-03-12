@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useParams } from 'react-router-dom'
-import { ChevronDown, ChevronUp, Check, Camera, X, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Check, Camera, X, Loader2, Mic, MicOff } from 'lucide-react'
 import {
   getChildren, getAnswer, saveAnswer, getMonthAnswersAllYears,
   getQuestionPhotoUrl, saveQuestionPhotoUrl, clearQuestionPhotoUrl,
@@ -131,17 +131,79 @@ function QuestionPhotoRow({ childId, year, month, questionId }) {
 }
 
 // ─── Vraagkaart ───────────────────────────────────────────────────────────────
+const isSpeechSupported = typeof window !== 'undefined' &&
+  !!(window.SpeechRecognition || window.webkitSpeechRecognition)
+
 function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
   const [value, setValue] = useState('')
+  const [listening, setListening] = useState(false)
+  const [interimText, setInterimText] = useState('')
+  const recognitionRef = useRef(null)
 
   useEffect(() => {
     setValue(getAnswer(childId, 'monthly', year, month, question.id))
   }, [childId, month, year, question.id])
 
+  // Stop opname als kaart dichtgaat
+  useEffect(() => {
+    if (!isOpen) {
+      recognitionRef.current?.abort()
+      setListening(false)
+      setInterimText('')
+    }
+  }, [isOpen])
+
+  // Cleanup bij unmount
+  useEffect(() => () => recognitionRef.current?.abort(), [])
+
   const handleChange = (e) => {
     setValue(e.target.value)
     saveAnswer(childId, 'monthly', year, month, question.id, e.target.value)
   }
+
+  // Voeg herkende tekst toe aan bestaande waarde
+  const appendText = (text) => {
+    setValue(prev => {
+      const spacer = prev && !prev.endsWith(' ') && !prev.endsWith('\n') ? ' ' : ''
+      const newVal = prev + spacer + text.trim()
+      saveAnswer(childId, 'monthly', year, month, question.id, newVal)
+      return newVal
+    })
+  }
+
+  const startListening = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) return
+    const r = new SR()
+    r.lang = 'nl-NL'
+    r.continuous = true
+    r.interimResults = true
+
+    r.onresult = (e) => {
+      let interim = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript
+        if (e.results[i].isFinal) {
+          appendText(t)
+          setInterimText('')
+        } else {
+          interim += t
+        }
+      }
+      setInterimText(interim)
+    }
+    r.onend  = () => { setListening(false); setInterimText('') }
+    r.onerror = (e) => {
+      if (e.error !== 'no-speech') console.warn('Spraakherkenning:', e.error)
+      setListening(false); setInterimText('')
+    }
+
+    recognitionRef.current = r
+    r.start()
+    setListening(true)
+  }
+
+  const stopListening = () => recognitionRef.current?.stop()
 
   const hasAnswer = value.trim().length > 0
   const hasPhoto  = !!getQuestionPhotoUrl(childId, year, month, question.id)
@@ -158,30 +220,45 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
           {question.question}
         </p>
         <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
-          {/* Camera-icoontje als er al een foto is (ingeklapt) */}
-          {hasPhoto && !isOpen && (
-            <Camera size={13} className="text-text-muted" />
-          )}
+          {hasPhoto && !isOpen && <Camera size={13} className="text-text-muted" />}
           {isOpen ? <ChevronUp size={16} className="text-text-muted" /> : <ChevronDown size={16} className="text-text-muted" />}
         </div>
       </button>
 
       {isOpen && (
         <div className="px-4 pb-4">
-          <textarea
-            value={value}
-            onChange={handleChange}
-            placeholder="Schrijf hier je antwoord..."
-            rows={4}
-            autoFocus
-            className="w-full border border-border-light rounded-xl px-3 py-2.5 text-sm text-text-dark placeholder-text-muted focus:outline-none focus:border-primary bg-background resize-none"
-          />
-          <QuestionPhotoRow
-            childId={childId}
-            year={year}
-            month={month}
-            questionId={question.id}
-          />
+          {/* Textarea + microfoon-knop */}
+          <div className="relative">
+            <textarea
+              value={value}
+              onChange={handleChange}
+              placeholder={listening ? 'Spreek nu…' : 'Schrijf hier je antwoord…'}
+              rows={4}
+              autoFocus={!listening}
+              className={`w-full border rounded-xl px-3 py-2.5 pr-9 text-sm text-text-dark placeholder-text-muted focus:outline-none bg-background resize-none transition-colors ${
+                listening ? 'border-rose/40' : 'border-border-light focus:border-primary'
+              }`}
+            />
+            {isSpeechSupported && (
+              <button
+                type="button"
+                onClick={listening ? stopListening : startListening}
+                className={`absolute bottom-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                  listening ? 'text-rose animate-pulse' : 'text-text-muted hover:text-primary'
+                }`}
+                title={listening ? 'Stop opname' : 'Inspreken (Nederlands)'}
+              >
+                {listening ? <MicOff size={14} /> : <Mic size={14} />}
+              </button>
+            )}
+          </div>
+
+          {/* Live preview tijdens inspreken */}
+          {interimText && (
+            <p className="mt-1 text-xs text-text-muted italic px-1">{interimText}…</p>
+          )}
+
+          <QuestionPhotoRow childId={childId} year={year} month={month} questionId={question.id} />
           <PreviousAnswers childId={childId} month={month} questionId={question.id} currentYear={year} />
         </div>
       )}
