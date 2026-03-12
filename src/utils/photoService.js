@@ -1,52 +1,56 @@
-import { storage } from '../firebase'
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+// Cloudinary unsigned upload — geen creditcard nodig, gratis tot 25 GB
+// Bij het bereiken van de limiet mislukken uploads gewoon; geen onverwachte rekening.
+const CLOUD_NAME = 'duticvyu4'
+const UPLOAD_PRESET = 'fases_upload'
 
-// Upload een bestand naar Firebase Storage en geef de download-URL terug
-async function uploadToStorage(path, file) {
-  const storageRef = ref(storage, path)
-  const snapshot = await uploadBytes(storageRef, file)
-  return await getDownloadURL(snapshot.ref)
-}
+/**
+ * Upload een afbeelding naar Cloudinary en geef de secure_url terug.
+ * Door een timestamp toe te voegen aan de public_id is elke upload uniek,
+ * zodat het preset geen "overwrite"-instelling nodig heeft.
+ */
+async function uploadToCloudinary(file, publicId) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', UPLOAD_PRESET)
+  formData.append('public_id', publicId)
 
-// Verwijder een bestand via zijn pad
-async function deleteAtPath(path) {
-  try {
-    const storageRef = ref(storage, path)
-    await deleteObject(storageRef)
-  } catch (e) {
-    // Bestand bestaat al niet meer: geen probleem
-    if (e.code !== 'storage/object-not-found') {
-      console.warn('Foto verwijderen mislukt', e)
-    }
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    { method: 'POST', body: formData }
+  )
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error?.message || `Upload mislukt (${res.status})`)
   }
+
+  const data = await res.json()
+  return data.secure_url
 }
 
 // ─── Maandfoto ────────────────────────────────────────────────────────────────
-export function monthPhotoPath(userId, childId, year, month) {
-  return `users/${userId}/children/${childId}/monthly/${year}/${month}`
+// Elke upload krijgt een unieke public_id via timestamp, zodat de URL altijd
+// verwijst naar de juiste foto. De URL wordt opgeslagen in Firestore/localStorage.
+
+export async function uploadMonthPhoto(_userId, childId, year, month, file) {
+  const publicId = `${childId}_${year}_${month}_${Date.now()}`
+  return await uploadToCloudinary(file, publicId)
 }
 
-export async function uploadMonthPhoto(userId, childId, year, month, file) {
-  const path = monthPhotoPath(userId, childId, year, month)
-  return await uploadToStorage(path, file)
-}
-
-export async function deleteMonthPhoto(userId, childId, year, month) {
-  const path = monthPhotoPath(userId, childId, year, month)
-  await deleteAtPath(path)
+// Cloudinary-verwijdering vereist server-side signing (API secret).
+// We verwijderen alleen de URL uit de database; de foto blijft in Cloudinary
+// maar wordt nooit meer weergegeven. Binnen 25 GB is dit geen probleem.
+export async function deleteMonthPhoto() {
+  // no-op — URL wordt verwijderd via clearMonthPhotoUrl in storage.js
 }
 
 // ─── Profielfoto ──────────────────────────────────────────────────────────────
-export function profilePhotoPath(userId, childId) {
-  return `users/${userId}/children/${childId}/profile`
+
+export async function uploadProfilePhoto(_userId, childId, file) {
+  const publicId = `${childId}_profile_${Date.now()}`
+  return await uploadToCloudinary(file, publicId)
 }
 
-export async function uploadProfilePhoto(userId, childId, file) {
-  const path = profilePhotoPath(userId, childId)
-  return await uploadToStorage(path, file)
-}
-
-export async function deleteProfilePhoto(userId, childId) {
-  const path = profilePhotoPath(userId, childId)
-  await deleteAtPath(path)
+export async function deleteProfilePhoto() {
+  // no-op — URL wordt verwijderd via clearChildPhotoUrl in storage.js
 }
