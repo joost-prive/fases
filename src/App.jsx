@@ -13,6 +13,7 @@ import Children from './pages/Children'
 import Milestones from './pages/Milestones'
 import Birthday from './pages/Birthday'
 import Settings from './pages/Settings'
+import Book from './pages/Book'
 
 function LoadingScreen() {
   const { t } = useTranslation()
@@ -75,6 +76,7 @@ function AppRoutes() {
       <Route path="/mijlpalen" element={<ProtectedLayout><Milestones /></ProtectedLayout>} />
       <Route path="/verjaardag" element={<ProtectedLayout><Birthday /></ProtectedLayout>} />
       <Route path="/instellingen" element={<ProtectedLayout><Settings /></ProtectedLayout>} />
+      <Route path="/boek" element={<ProtectedLayout><Book /></ProtectedLayout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

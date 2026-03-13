@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, BookOpen, Clock, Users, Star } from 'lucide-react'
+import { Home, BookOpen, Clock, Users, Star, BookMarked } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/tijdreis', icon: Clock, key: 'nav.history' },
   { to: '/kinderen', icon: Users, key: 'nav.children' },
   { to: '/mijlpalen', icon: Star, key: 'nav.milestones' },
+  { to: '/boek', icon: BookMarked, key: 'nav.book' },
 ]
 
 export default function Navigation() {
@@ -21,7 +22,7 @@ export default function Navigation() {
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all duration-200 min-w-[52px] ${
+              `flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl transition-all duration-200 min-w-[44px] ${
                 isActive
                   ? 'text-primary'
                   : 'text-text-muted hover:text-text-dark'

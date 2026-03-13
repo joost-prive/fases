@@ -17,7 +17,8 @@
     "questions": "Vragen",
     "history": "Tijdreis",
     "children": "Kinderen",
-    "milestones": "Mijlpalen"
+    "milestones": "Mijlpalen",
+    "book": "Boek"
   },
   "months": {
     "Januari": "Januari",
@@ -377,6 +378,33 @@
     "8": "Wat hebben we met mijn kinderfeestje gedaan?",
     "9": "Wat heb ik getrakteerd op school?",
     "10": "Wat heb ik beloofd om beter te doen nu ik een jaar ouder ben?"
+  },
+  "book": {
+    "title": "Gezinsboek",
+    "subtitle": "Jouw verhaal",
+    "cover_subtitle": "Jouw gezinsboek",
+    "chapter_questions": "{{count}} vragen",
+    "birthday_chapter": "Verjaardag",
+    "birthday_chapter_desc": "{{count}} jaar met verjaardagsvragen",
+    "milestones_chapter": "Mijlpalen",
+    "milestones_chapter_desc": "Bijzondere eerste momenten & groeicurve",
+    "growth_title": "Groeicurve",
+    "growth_date": "Datum",
+    "growth_height": "Lengte",
+    "growth_weight": "Gewicht",
+    "preview_title": "Jouw boek is klaar",
+    "preview_desc": "Een boek over {{children}}, van {{yearFrom}} tot {{yearTo}}.",
+    "stat_children": "Kinderen",
+    "stat_months": "Maanden",
+    "stat_pages": "Pagina's",
+    "preparing": "Laden…",
+    "generating": "Boek maken…",
+    "download_btn": "Download PDF",
+    "empty_title": "Nog niets om af te drukken",
+    "empty_desc": "Vul eerst een paar maanden in, dan maak je hier een boek.",
+    "print_title": "Druk je boek af",
+    "print_desc": "Binnenkort kun je jouw Fases-boek als echt fotoboek bestellen via een printservice.",
+    "coming_soon": "Binnenkort"
   },
   "milestone_q": {
     "1": "Wanneer lachte ik voor het eerst?",

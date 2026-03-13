@@ -17,7 +17,8 @@
     "questions": "Fragen",
     "history": "Zeitreise",
     "children": "Kinder",
-    "milestones": "Meilensteine"
+    "milestones": "Meilensteine",
+    "book": "Buch"
   },
   "months": {
     "Januari": "Januar",
@@ -377,6 +378,33 @@
     "8": "Was haben wir auf meiner Geburtstagsparty gemacht?",
     "9": "Was habe ich in der Schule mitgebracht?",
     "10": "Was habe ich versprochen besser zu machen, jetzt, wo ich ein Jahr älter bin?"
+  },
+  "book": {
+    "title": "Familienbuch",
+    "subtitle": "Deine Geschichte",
+    "cover_subtitle": "Dein Familienbuch",
+    "chapter_questions": "{{count}} Fragen",
+    "birthday_chapter": "Geburtstag",
+    "birthday_chapter_desc": "{{count}} Jahre mit Geburtstagsfragen",
+    "milestones_chapter": "Meilensteine",
+    "milestones_chapter_desc": "Besondere erste Momente & Wachstumskurve",
+    "growth_title": "Wachstumskurve",
+    "growth_date": "Datum",
+    "growth_height": "Größe",
+    "growth_weight": "Gewicht",
+    "preview_title": "Dein Buch ist fertig",
+    "preview_desc": "Ein Buch über {{children}}, von {{yearFrom}} bis {{yearTo}}.",
+    "stat_children": "Kinder",
+    "stat_months": "Monate",
+    "stat_pages": "Seiten",
+    "preparing": "Laden…",
+    "generating": "Buch erstellen…",
+    "download_btn": "PDF herunterladen",
+    "empty_title": "Noch nichts zum Drucken",
+    "empty_desc": "Fülle zuerst ein paar Monate aus, dann erstelle hier ein Buch.",
+    "print_title": "Dein Buch drucken",
+    "print_desc": "Bald kannst du dein Fases-Buch als echtes Fotobuch über einen Druckservice bestellen.",
+    "coming_soon": "Demnächst"
   },
   "milestone_q": {
     "1": "Wann habe ich zum ersten Mal gelächelt?",

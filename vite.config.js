@@ -9,4 +9,16 @@ export default defineConfig({
     strictPort: false,
     host: true,
   },
+  optimizeDeps: {
+    include: ['@react-pdf/renderer'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          pdf: ['@react-pdf/renderer'],
+        },
+      },
+    },
+  },
 })

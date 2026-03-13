@@ -17,7 +17,8 @@
     "questions": "Questions",
     "history": "Journey",
     "children": "Children",
-    "milestones": "Milestones"
+    "milestones": "Milestones",
+    "book": "Book"
   },
   "months": {
     "Januari": "January",
@@ -377,6 +378,33 @@
     "8": "What did we do at my birthday party?",
     "9": "What did I bring as a treat to school?",
     "10": "What did I promise to do better now that I'm a year older?"
+  },
+  "book": {
+    "title": "Family Book",
+    "subtitle": "Your story",
+    "cover_subtitle": "Your family book",
+    "chapter_questions": "{{count}} questions",
+    "birthday_chapter": "Birthday",
+    "birthday_chapter_desc": "{{count}} years with birthday questions",
+    "milestones_chapter": "Milestones",
+    "milestones_chapter_desc": "Special first moments & growth curve",
+    "growth_title": "Growth curve",
+    "growth_date": "Date",
+    "growth_height": "Height",
+    "growth_weight": "Weight",
+    "preview_title": "Your book is ready",
+    "preview_desc": "A book about {{children}}, from {{yearFrom}} to {{yearTo}}.",
+    "stat_children": "Children",
+    "stat_months": "Months",
+    "stat_pages": "Pages",
+    "preparing": "Loading…",
+    "generating": "Creating book…",
+    "download_btn": "Download PDF",
+    "empty_title": "Nothing to print yet",
+    "empty_desc": "Fill in a few months first, then create a book here.",
+    "print_title": "Print your book",
+    "print_desc": "Soon you'll be able to order your Fases book as a real photo book through a print service.",
+    "coming_soon": "Coming soon"
   },
   "milestone_q": {
     "1": "When did I smile for the first time?",
