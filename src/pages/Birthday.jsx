@@ -82,8 +82,8 @@ export default function Birthday() {
   }).length
 
   return (
-    <div className="min-h-screen bg-background pb-24 page-enter">
-      <div className="bg-white border-b border-border-light px-5 pt-12 pb-5">
+    <div className="min-h-screen pb-24 page-enter">
+      <div className="bg-white/90 backdrop-blur-md border-b border-border-light px-5 pt-12 pb-5">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={() => navigate(-1)} className="text-text-muted">
             <ArrowLeft size={22} />

@@ -81,8 +81,8 @@ export default function Home() {
   const currentMonthDisplay = t(`months.${currentMonth}`)
 
   return (
-    <div className="min-h-screen bg-background pb-24 page-enter">
-      <div className="bg-white border-b border-border-light px-5 pt-12 pb-6">
+    <div className="min-h-screen pb-24 page-enter">
+      <div className="bg-white/90 backdrop-blur-md border-b border-border-light px-5 pt-12 pb-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
             <AppLogo size={34} />
@@ -125,7 +125,7 @@ export default function Home() {
           <>
             {/* Vragen invullen */}
             <div
-              className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+              className="bg-white/90 rounded-3xl border border-border-light shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
               onClick={() => navigate(`/vragen?month=${currentMonth}&year=${currentYear}`)}
             >
               <div className="px-5 pt-5 pb-4">
@@ -179,7 +179,7 @@ export default function Home() {
 
             {/* Tijdreis */}
             <div
-              className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+              className="bg-white/90 rounded-3xl border border-border-light shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
               onClick={() => navigate('/tijdreis')}
             >
               <div className="px-5 py-5 flex items-start gap-4">
@@ -202,7 +202,7 @@ export default function Home() {
 
             {/* Gemiste maanden */}
             {missedMonths.length > 0 && (
-              <div className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden">
+              <div className="bg-white/90 rounded-3xl border border-border-light shadow-sm overflow-hidden">
                 <div className="px-5 pt-4 pb-3 flex items-center gap-2">
                   <AlertCircle size={16} className="text-yellow flex-shrink-0" />
                   <p className="text-sm font-semibold text-text-dark">{t('home.missed_months')}</p>

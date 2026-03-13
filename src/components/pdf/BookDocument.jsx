@@ -1,4 +1,5 @@
 import { Document } from '@react-pdf/renderer'
+import { getCurrentSeason, getSeasonFromDutchMonth } from '../../utils/seasonUtils'
 import CoverPage from './pages/CoverPage'
 import MonthChapterPage from './pages/MonthChapterPage'
 import QuestionPage from './pages/QuestionPage'
@@ -22,7 +23,7 @@ export default function BookDocument({ bookData, t }) {
       producer="@react-pdf/renderer"
     >
       {/* Cover */}
-      <CoverPage children={children} yearRange={yearRange} t={t} />
+      <CoverPage children={children} yearRange={yearRange} t={t} season={getCurrentSeason()} />
 
       {/* Per maand: hoofdstuk + per vraag een pagina */}
       {months.map(({ month, questions }) => {

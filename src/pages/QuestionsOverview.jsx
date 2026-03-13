@@ -24,8 +24,8 @@ export default function QuestionsOverview() {
   ]
 
   return (
-    <div className="min-h-screen bg-background pb-24 page-enter">
-      <div className="bg-white border-b border-border-light px-5 pt-12 pb-5">
+    <div className="min-h-screen pb-24 page-enter">
+      <div className="bg-white/90 backdrop-blur-md border-b border-border-light px-5 pt-12 pb-5">
         <p className="text-text-muted text-sm mb-0.5">Maandelijks</p>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
           Vragen <Sparkles size={18} className="text-yellow" />

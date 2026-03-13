@@ -8,6 +8,8 @@ import {
 } from '../utils/storage'
 import { uploadQuestionPhoto } from '../utils/photoService'
 import { useAuth } from '../contexts/AuthContext'
+import { useSeason } from '../contexts/SeasonContext'
+import { getSeasonFromDutchMonth, getCurrentSeason } from '../utils/seasonUtils'
 import { filterQuestionsForAge, getCurrentMonthName, getCurrentYear } from '../utils/ageUtils'
 import { MONTHLY_QUESTIONS, MONTHS } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
@@ -211,7 +213,7 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
   const questionText = t(`monthly.${month}.${question.id}`, { defaultValue: question.question })
 
   return (
-    <div className={`bg-white rounded-2xl border transition-all overflow-hidden ${isOpen ? 'border-primary shadow-sm' : 'border-border-light'}`}>
+    <div className={`bg-white/90 rounded-2xl border transition-all overflow-hidden ${isOpen ? 'border-primary shadow-sm' : 'border-border-light'}`}>
       <button className="w-full flex items-start gap-3 p-4 text-left" onClick={onToggle}>
         <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${hasAnswer ? 'bg-green' : 'bg-background border border-border-light'}`}>
           {hasAnswer
@@ -269,6 +271,7 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
 // ─── Hoofdpagina ──────────────────────────────────────────────────────────────
 export default function MonthlyQuestions() {
   const { t } = useTranslation()
+  const { setActiveSeason } = useSeason()
   const [params, setParams] = useSearchParams()
   const { month: monthParam } = useParams()
 
@@ -289,6 +292,11 @@ export default function MonthlyQuestions() {
 
   useEffect(() => { setOpenQuestion(null) }, [selectedMonth, selectedYear, selectedChildId])
 
+  useEffect(() => {
+    setActiveSeason(getSeasonFromDutchMonth(selectedMonth))
+    return () => setActiveSeason(getCurrentSeason())
+  }, [selectedMonth])
+
   const selectedChild = children.find(c => c.id === selectedChildId)
   const questions = selectedChild
     ? filterQuestionsForAge(MONTHLY_QUESTIONS[selectedMonth] || [], selectedChild.birthdate, selectedYear, selectedMonth)
@@ -303,8 +311,8 @@ export default function MonthlyQuestions() {
   for (let y = currentYear; y >= currentYear - 5; y--) years.push(y)
 
   return (
-    <div className="min-h-screen bg-background pb-24 page-enter">
-      <div className="bg-white border-b border-border-light px-5 pt-12 pb-4 sticky top-0 z-40">
+    <div className="min-h-screen pb-24 page-enter">
+      <div className="bg-white/90 backdrop-blur-md border-b border-border-light px-5 pt-12 pb-4 sticky top-0 z-40">
         <p className="text-text-muted text-sm mb-1">{t('questions.subtitle')}</p>
 
         <div className="flex gap-2 mb-3">

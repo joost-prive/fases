@@ -14,7 +14,7 @@ const navItems = [
 export default function Navigation() {
   const { t } = useTranslation()
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light z-50 safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-border-light z-50 safe-bottom">
       <div className="max-w-lg mx-auto flex items-center justify-around px-2 py-2">
         {navItems.map(({ to, icon: Icon, key }) => (
           <NavLink

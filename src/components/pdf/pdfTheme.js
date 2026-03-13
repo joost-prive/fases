@@ -1,5 +1,28 @@
 import { StyleSheet } from '@react-pdf/renderer'
 
+export const SEASON_THEMES = {
+  winter: {
+    skyTop: '#0D47A1', skyMid: '#1976D2', skyBottom: '#90CAF9',
+    hill1: '#C8DCE8', hill2: '#D9E8EE', hill3: '#EEF7FB',
+    accent: '#90CAF9', text: '#FFFFFF',
+  },
+  spring: {
+    skyTop: '#FF9BB7', skyMid: '#FFCDE0', skyBottom: '#B3E5FC',
+    hill1: '#8BC34A', hill2: '#7CB342', hill3: '#9CCC65',
+    accent: '#F48FB1', text: '#FFFFFF',
+  },
+  summer: {
+    skyTop: '#1565C0', skyMid: '#2196F3', skyBottom: '#64B5F6',
+    hill1: '#2E7D32', hill2: '#388E3C', hill3: '#43A047',
+    accent: '#FFD600', text: '#FFFFFF',
+  },
+  autumn: {
+    skyTop: '#B71C1C', skyMid: '#FF7043', skyBottom: '#FFA726',
+    hill1: '#5D4037', hill2: '#6D4C41', hill3: '#795548',
+    accent: '#FF7043', text: '#FFFFFF',
+  },
+}
+
 export const COLORS = {
   primary: '#E07845',
   teal: '#5A9EA0',

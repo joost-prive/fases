@@ -45,9 +45,9 @@ export default function Book() {
     : 'Fases_Gezinsboek.pdf'
 
   return (
-    <div className="min-h-screen bg-background pb-24 page-enter">
+    <div className="min-h-screen pb-24 page-enter">
       {/* Header */}
-      <div className="bg-white border-b border-border-light px-5 pt-12 pb-5">
+      <div className="bg-white/90 backdrop-blur-md border-b border-border-light px-5 pt-12 pb-5">
         <p className="text-text-muted text-sm mb-0.5">{t('book.subtitle')}</p>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
           {t('book.title')}

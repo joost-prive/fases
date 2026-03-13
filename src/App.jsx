@@ -1,9 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { SeasonProvider, useSeason } from './contexts/SeasonContext'
 import { isOnboardingComplete } from './utils/storage'
 import Navigation from './components/Navigation'
 import AppLogo from './components/AppLogo'
+import SeasonalBackground from './components/SeasonalBackground'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
 import Home from './pages/Home'
@@ -30,6 +32,7 @@ function LoadingScreen() {
 // Beschermde route: ingelogd + onboarding afgerond
 function ProtectedLayout({ children }) {
   const { user, loading } = useAuth()
+  const { activeSeason } = useSeason()
 
   if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
@@ -37,6 +40,7 @@ function ProtectedLayout({ children }) {
 
   return (
     <>
+      <SeasonalBackground season={activeSeason} />
       <div className="max-w-lg mx-auto flex-1">
         {children}
       </div>
@@ -86,7 +90,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <SeasonProvider>
+          <AppRoutes />
+        </SeasonProvider>
       </AuthProvider>
     </BrowserRouter>
   )

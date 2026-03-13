@@ -135,7 +135,7 @@ function MonthSection({ month, childId, child }) {
   const yearsKey = yearsCount === 1 ? 'history.years_filled_one' : 'history.years_filled_other'
 
   return (
-    <div className="bg-white rounded-2xl border border-border-light shadow-sm overflow-hidden">
+    <div className="bg-white/90 rounded-2xl border border-border-light shadow-sm overflow-hidden">
       <button className="w-full flex items-center justify-between p-4 text-left" onClick={() => setExpanded(!expanded)}>
         <div>
           <h3 className="font-bold text-text-dark">{t(`months.${month}`)}</h3>
@@ -174,7 +174,7 @@ function TogetherMonthSection({ month, children, allData }) {
   if (!hasAny) return null
 
   return (
-    <div className="bg-white rounded-2xl border border-border-light shadow-sm overflow-hidden">
+    <div className="bg-white/90 rounded-2xl border border-border-light shadow-sm overflow-hidden">
       <button className="w-full flex items-center justify-between p-4 text-left" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-text-dark">{t(`months.${month}`)}</h3>
@@ -220,8 +220,8 @@ export default function History() {
   const allData = getData()
 
   return (
-    <div className="min-h-screen bg-background pb-24 page-enter">
-      <div className="bg-white border-b border-border-light px-5 pt-12 pb-5">
+    <div className="min-h-screen pb-24 page-enter">
+      <div className="bg-white/90 backdrop-blur-md border-b border-border-light px-5 pt-12 pb-5">
         <p className="text-text-muted text-sm mb-0.5">{t('history.subtitle')}</p>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
           {t('history.title')} <Clock size={20} className="text-teal" />

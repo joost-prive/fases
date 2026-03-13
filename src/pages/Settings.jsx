@@ -74,8 +74,8 @@ export default function Settings() {
   ]
 
   return (
-    <div className="min-h-screen bg-background pb-24 page-enter">
-      <div className="bg-white border-b border-border-light px-5 pt-12 pb-5">
+    <div className="min-h-screen pb-24 page-enter">
+      <div className="bg-white/90 backdrop-blur-md border-b border-border-light px-5 pt-12 pb-5">
         <p className="text-text-muted text-sm mb-0.5">{t('settings.subtitle')}</p>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
           {t('settings.title')} <SettingsIcon size={20} className="text-text-muted" />
@@ -85,7 +85,7 @@ export default function Settings() {
       <div className="px-5 py-5 space-y-4">
 
         {/* Taal */}
-        <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
+        <div className="bg-white/90 rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Globe size={18} className="text-primary" />
             <h2 className="font-bold text-text-dark">{t('settings.language_title')}</h2>
@@ -109,7 +109,7 @@ export default function Settings() {
         </div>
 
         {/* Herinneringen */}
-        <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
+        <div className="bg-white/90 rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Bell size={18} className="text-primary" />
             <h2 className="font-bold text-text-dark">{t('settings.reminders_title')}</h2>
@@ -149,7 +149,7 @@ export default function Settings() {
         </div>
 
         {/* Data */}
-        <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
+        <div className="bg-white/90 rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Download size={18} className="text-teal" />
             <h2 className="font-bold text-text-dark">{t('settings.data_title')}</h2>
@@ -170,7 +170,7 @@ export default function Settings() {
         </div>
 
         {/* Danger zone */}
-        <div className="bg-white rounded-2xl border border-rose/20 p-5 shadow-sm">
+        <div className="bg-white/90 rounded-2xl border border-rose/20 p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Trash2 size={18} className="text-rose" />
             <h2 className="font-bold text-text-dark">{t('settings.danger_title')}</h2>
@@ -206,7 +206,7 @@ export default function Settings() {
         </div>
 
         {/* Account */}
-        <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
+        <div className="bg-white/90 rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <LogOut size={18} className="text-text-muted" />
             <h2 className="font-bold text-text-dark">{t('settings.account_title')}</h2>
@@ -225,7 +225,7 @@ export default function Settings() {
         </div>
 
         {/* Over Fases */}
-        <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
+        <div className="bg-white/90 rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Info size={18} className="text-text-muted" />
             <h2 className="font-bold text-text-dark">{t('settings.about_title')}</h2>
