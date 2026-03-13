@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Clock, ChevronRight, AlertCircle, Settings } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getChildren, getMonthCompletion } from '../utils/storage'
-import { getCurrentMonthName, getCurrentYear, getAgeText, isBirthMonth } from '../utils/ageUtils'
+import { getCurrentMonthName, getCurrentYear, isBirthMonth } from '../utils/ageUtils'
 import { filterQuestionsForAge } from '../utils/ageUtils'
 import { MONTHLY_QUESTIONS, MONTHS } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
 import AppLogo from '../components/AppLogo'
 
 function ChildProgress({ child, month, year }) {
+  const { t } = useTranslation()
   const questions = filterQuestionsForAge(MONTHLY_QUESTIONS[month] || [], child.birthdate, year, month)
   const { filled, total } = getMonthCompletion(child.id, year, month, questions.length)
   const pct = total > 0 ? Math.round((filled / total) * 100) : 0
@@ -20,7 +22,7 @@ function ChildProgress({ child, month, year }) {
         <div className="flex justify-between items-center mb-1">
           <span className="text-sm font-medium text-text-dark">{child.name}</span>
           <span className={`text-xs font-semibold ${pct === 100 ? 'text-green' : 'text-text-muted'}`}>
-            {pct === 100 ? '✓ Klaar' : `${filled}/${total}`}
+            {pct === 100 ? t('home.done_check') : `${filled}/${total}`}
           </span>
         </div>
         <div className="h-1.5 bg-background rounded-full overflow-hidden">
@@ -54,6 +56,7 @@ function getMissedMonths(children, currentMonth, currentYear) {
 }
 
 export default function Home() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [children, setChildren] = useState([])
   const currentMonth = getCurrentMonthName()
@@ -75,15 +78,16 @@ export default function Home() {
   }, 0)
   const allDone = totalPossible > 0 && totalFilled === totalPossible
 
+  const currentMonthDisplay = t(`months.${currentMonth}`)
+
   return (
     <div className="min-h-screen bg-background pb-24 page-enter">
-      {/* Header */}
       <div className="bg-white border-b border-border-light px-5 pt-12 pb-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2.5">
             <AppLogo size={34} />
             <div>
-              <p className="text-text-muted text-xs mb-0">Jouw maandboek</p>
+              <p className="text-text-muted text-xs mb-0">{t('home.subtitle')}</p>
               <h1 className="text-xl font-bold text-text-dark leading-tight">Fases</h1>
             </div>
           </div>
@@ -106,20 +110,20 @@ export default function Home() {
         {children.length === 0 ? (
           <div className="text-center py-12 flex flex-col items-center">
             <AppLogo size={56} className="mb-4" />
-            <p className="font-bold text-text-dark text-lg mb-2">Welkom bij Fases!</p>
+            <p className="font-bold text-text-dark text-lg mb-2">{t('home.welcome_title')}</p>
             <p className="text-text-muted text-sm mb-6 leading-relaxed max-w-xs mx-auto">
-              Leg in een paar minuten per maand de mooiste momenten van je gezin vast.
+              {t('home.welcome_desc')}
             </p>
             <button
               onClick={() => navigate('/kinderen')}
               className="bg-primary text-white font-semibold px-6 py-3 rounded-2xl shadow-md"
             >
-              Eerste kind toevoegen
+              {t('home.add_first_child')}
             </button>
           </div>
         ) : (
           <>
-            {/* OPTIE 1 — Vragen invullen */}
+            {/* Vragen invullen */}
             <div
               className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
               onClick={() => navigate(`/vragen?month=${currentMonth}&year=${currentYear}`)}
@@ -131,11 +135,13 @@ export default function Home() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <h2 className="font-bold text-text-dark text-base">Vragen invullen</h2>
+                      <h2 className="font-bold text-text-dark text-base">{t('home.questions_title')}</h2>
                       <ChevronRight size={18} className="text-text-muted" />
                     </div>
                     <p className="text-text-muted text-sm mt-0.5">
-                      {allDone ? `${currentMonth} is helemaal klaar 🎉` : `De vragen van ${currentMonth} staan klaar`}
+                      {allDone
+                        ? t('home.questions_done', { month: currentMonthDisplay })
+                        : t('home.questions_ready', { month: currentMonthDisplay })}
                     </p>
                   </div>
                 </div>
@@ -147,7 +153,7 @@ export default function Home() {
               </div>
               {allDone && (
                 <div className="bg-green/10 border-t border-green/20 px-5 py-2.5">
-                  <p className="text-xs font-medium text-green">✓ Alle vragen voor {currentMonth} zijn ingevuld</p>
+                  <p className="text-xs font-medium text-green">{t('home.all_done', { month: currentMonthDisplay })}</p>
                 </div>
               )}
             </div>
@@ -161,9 +167,9 @@ export default function Home() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">🎂</span>
                   <div>
-                    <p className="font-bold text-text-dark text-sm">Verjaardagsvragen!</p>
+                    <p className="font-bold text-text-dark text-sm">{t('home.birthday_title')}</p>
                     <p className="text-xs text-text-muted">
-                      {children.filter(c => isBirthMonth(c.birthdate)).map(c => c.name).join(' & ')} is jarig deze maand
+                      {t('home.birthday_desc', { names: children.filter(c => isBirthMonth(c.birthdate)).map(c => c.name).join(' & ') })}
                     </p>
                   </div>
                 </div>
@@ -171,7 +177,7 @@ export default function Home() {
               </div>
             )}
 
-            {/* OPTIE 2 — Tijdreis */}
+            {/* Tijdreis */}
             <div
               className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
               onClick={() => navigate('/tijdreis')}
@@ -182,22 +188,24 @@ export default function Home() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h2 className="font-bold text-text-dark text-base">Tijdreis bekijken</h2>
+                    <h2 className="font-bold text-text-dark text-base">{t('home.history_title')}</h2>
                     <ChevronRight size={18} className="text-text-muted" />
                   </div>
                   <p className="text-text-muted text-sm mt-0.5 leading-snug">
-                    Blader door eerdere antwoorden en zie hoe {children.length > 1 ? 'jullie kinderen groeien' : `${children[0]?.name} groeit`}
+                    {children.length > 1
+                      ? t('home.history_desc_many')
+                      : t('home.history_desc_one', { name: children[0]?.name })}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Achterstand: gemiste maanden */}
+            {/* Gemiste maanden */}
             {missedMonths.length > 0 && (
               <div className="bg-white rounded-3xl border border-border-light shadow-sm overflow-hidden">
                 <div className="px-5 pt-4 pb-3 flex items-center gap-2">
                   <AlertCircle size={16} className="text-yellow flex-shrink-0" />
-                  <p className="text-sm font-semibold text-text-dark">Eerdere maanden nog in te vullen</p>
+                  <p className="text-sm font-semibold text-text-dark">{t('home.missed_months')}</p>
                 </div>
                 {missedMonths.map(({ month, year }) => (
                   <button
@@ -205,7 +213,7 @@ export default function Home() {
                     className="w-full flex items-center justify-between px-5 py-3 border-t border-border-light text-left active:bg-background"
                     onClick={() => navigate(`/vragen?month=${month}&year=${year}`)}
                   >
-                    <span className="text-sm text-text-dark font-medium">{month} {year}</span>
+                    <span className="text-sm text-text-dark font-medium">{t(`months.${month}`)} {year}</span>
                     <ChevronRight size={16} className="text-text-muted" />
                   </button>
                 ))}

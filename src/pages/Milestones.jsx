@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Star, Check, Plus, Trash2, Ruler, Weight, TrendingUp, Pencil } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   getChildren, getAnswer, saveAnswer,
   getMeasurements, addMeasurement, updateMeasurement, removeMeasurement,
 } from '../utils/storage'
+import { getLocaleFromLang } from '../utils/ageUtils'
 import { MILESTONES } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
 
@@ -20,7 +22,7 @@ function delta(current, previous, unit) {
 
 // ─── Sparkline groeigrafiek ────────────────────────────────────────────────────
 
-function GrowthSparkline({ measurements, color }) {
+function GrowthSparkline({ measurements, color, locale }) {
   const valid = measurements.filter(m => parseFloat(m.height) > 0)
   if (valid.length < 2) return null
 
@@ -62,8 +64,8 @@ function GrowthSparkline({ measurements, color }) {
         ))}
       </svg>
       <div className="flex justify-between text-xs text-text-muted px-1">
-        <span>{new Date(valid[0].date).toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' })}</span>
-        <span>{new Date(valid[valid.length - 1].date).toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' })}</span>
+        <span>{new Date(valid[0].date).toLocaleDateString(locale, { month: 'short', year: 'numeric' })}</span>
+        <span>{new Date(valid[valid.length - 1].date).toLocaleDateString(locale, { month: 'short', year: 'numeric' })}</span>
       </div>
     </div>
   )
@@ -72,6 +74,7 @@ function GrowthSparkline({ measurements, color }) {
 // ─── Formulier: nieuwe of bewerkte meting ─────────────────────────────────────
 
 function MeasurementForm({ initial, onSave, onCancel }) {
+  const { t } = useTranslation()
   const today = new Date().toISOString().split('T')[0]
   const [date,   setDate]   = useState(initial?.date   || today)
   const [height, setHeight] = useState(initial?.height || '')
@@ -82,7 +85,7 @@ function MeasurementForm({ initial, onSave, onCancel }) {
   return (
     <div className="bg-background border border-primary/20 rounded-2xl p-4 space-y-3">
       <div>
-        <label className="block text-xs font-semibold text-text-muted mb-1.5">Datum</label>
+        <label className="block text-xs font-semibold text-text-muted mb-1.5">{t('milestones.date_label')}</label>
         <input
           type="date"
           value={date}
@@ -93,12 +96,12 @@ function MeasurementForm({ initial, onSave, onCancel }) {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-text-muted mb-1.5">Lengte (cm)</label>
+          <label className="block text-xs font-semibold text-text-muted mb-1.5">{t('milestones.height_label')}</label>
           <input
             type="number"
             value={height}
             onChange={e => setHeight(e.target.value)}
-            placeholder="bijv. 95"
+            placeholder={t('milestones.height_placeholder')}
             step="0.5"
             min="0"
             autoFocus={!initial}
@@ -106,12 +109,12 @@ function MeasurementForm({ initial, onSave, onCancel }) {
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-text-muted mb-1.5">Gewicht (kg)</label>
+          <label className="block text-xs font-semibold text-text-muted mb-1.5">{t('milestones.weight_label')}</label>
           <input
             type="number"
             value={weight}
             onChange={e => setWeight(e.target.value)}
-            placeholder="bijv. 14.2"
+            placeholder={t('milestones.weight_placeholder')}
             step="0.1"
             min="0"
             className="w-full border border-border-light rounded-xl px-3 py-2.5 text-sm text-text-dark focus:outline-none focus:border-primary bg-white"
@@ -124,13 +127,13 @@ function MeasurementForm({ initial, onSave, onCancel }) {
           disabled={!canSave}
           className="flex-1 bg-primary text-white text-sm font-semibold py-2.5 rounded-xl disabled:opacity-40 transition-opacity"
         >
-          Opslaan
+          {t('common.save')}
         </button>
         <button
           onClick={onCancel}
           className="px-4 py-2.5 border border-border-light rounded-xl text-sm text-text-muted"
         >
-          Annuleer
+          {t('common.cancel')}
         </button>
       </div>
     </div>
@@ -140,6 +143,8 @@ function MeasurementForm({ initial, onSave, onCancel }) {
 // ─── Groeicurve sectie ────────────────────────────────────────────────────────
 
 function GrowthSection({ childId, color }) {
+  const { t, i18n } = useTranslation()
+  const locale = getLocaleFromLang(i18n.language)
   const [measurements, setMeasurements] = useState([])
   const [showForm,     setShowForm]     = useState(false)
   const [editingId,    setEditingId]    = useState(null)
@@ -152,19 +157,19 @@ function GrowthSection({ childId, color }) {
   const handleEdit = (data) => { updateMeasurement(childId, editingId, data); setEditingId(null); reload() }
   const handleDel  = (id)   => { removeMeasurement(childId, id);           setDeleteId(null);  reload() }
 
-  // Nieuwste meting bovenaan in de lijst
   const sorted = [...measurements].reverse()
+
+  const countKey = measurements.length === 1 ? 'milestones.measurement_count_one' : 'milestones.measurement_count_other'
 
   return (
     <div className="bg-white rounded-2xl border border-border-light shadow-sm overflow-hidden">
-      {/* Header */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp size={18} className="text-teal" />
-          <h2 className="font-bold text-text-dark">Groeicurve</h2>
+          <h2 className="font-bold text-text-dark">{t('milestones.growth_title')}</h2>
           {measurements.length > 0 && (
             <span className="text-xs text-text-muted bg-background px-2 py-0.5 rounded-full">
-              {measurements.length} meting{measurements.length !== 1 ? 'en' : ''}
+              {t(countKey, { count: measurements.length })}
             </span>
           )}
         </div>
@@ -174,34 +179,30 @@ function GrowthSection({ childId, color }) {
             className="flex items-center gap-1.5 text-sm font-semibold text-primary bg-primary/10 px-3 py-1.5 rounded-full active:bg-primary/20"
           >
             <Plus size={14} strokeWidth={2.5} />
-            Meting
+            {t('milestones.measurement_add')}
           </button>
         )}
       </div>
 
-      {/* Sparkline */}
       {measurements.length >= 2 && (
         <div className="px-4 pb-3 border-b border-border-light">
-          <p className="text-xs text-text-muted mb-1 font-medium">Lengte over tijd</p>
-          <GrowthSparkline measurements={measurements} color={color} />
+          <p className="text-xs text-text-muted mb-1 font-medium">{t('milestones.growth_over_time')}</p>
+          <GrowthSparkline measurements={measurements} color={color} locale={locale} />
         </div>
       )}
 
-      {/* Formulier: nieuwe meting */}
       {showForm && (
         <div className="px-4 py-4 border-b border-border-light">
           <MeasurementForm onSave={handleAdd} onCancel={() => setShowForm(false)} />
         </div>
       )}
 
-      {/* Lege staat */}
       {sorted.length === 0 && !showForm && (
         <div className="px-4 pb-5 text-center">
-          <p className="text-sm text-text-muted">Nog geen metingen — voeg de eerste toe!</p>
+          <p className="text-sm text-text-muted">{t('milestones.measurement_empty')}</p>
         </div>
       )}
 
-      {/* Tijdlijn */}
       <div className="divide-y divide-border-light">
         {sorted.map((m, i) => {
           const prev = sorted[i + 1]
@@ -218,18 +219,16 @@ function GrowthSection({ childId, color }) {
 
           return (
             <div key={m.id} className="px-4 py-3 flex items-center gap-3">
-              {/* Datum-badge */}
               <div className="flex-shrink-0 text-center w-12">
                 <span
                   className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white block"
                   style={{ backgroundColor: color }}
                 >
-                  {new Date(m.date).toLocaleDateString('nl-NL', { month: 'short' })} {String(new Date(m.date).getFullYear()).slice(2)}
+                  {new Date(m.date).toLocaleDateString(locale, { month: 'short' })} {String(new Date(m.date).getFullYear()).slice(2)}
                 </span>
                 <p className="text-sm font-bold text-text-dark mt-0.5">{new Date(m.date).getDate()}</p>
               </div>
 
-              {/* Waarden */}
               <div className="flex-1 flex items-center gap-4 min-w-0">
                 {m.height && (
                   <div className="flex items-center gap-1.5">
@@ -247,15 +246,14 @@ function GrowthSection({ childId, color }) {
                 )}
               </div>
 
-              {/* Acties */}
               <div className="flex items-center gap-1 flex-shrink-0">
                 <button onClick={() => setEditingId(m.id)} className="p-1.5 text-text-muted rounded-lg active:bg-background">
                   <Pencil size={13} />
                 </button>
                 {deleteId === m.id ? (
                   <div className="flex gap-1">
-                    <button onClick={() => handleDel(m.id)} className="text-xs px-2 py-1 bg-rose text-white rounded-lg font-bold">Ja</button>
-                    <button onClick={() => setDeleteId(null)} className="text-xs px-2 py-1 border border-border-light rounded-lg text-text-muted">Nee</button>
+                    <button onClick={() => handleDel(m.id)} className="text-xs px-2 py-1 bg-rose text-white rounded-lg font-bold">{t('common.yes')}</button>
+                    <button onClick={() => setDeleteId(null)} className="text-xs px-2 py-1 border border-border-light rounded-lg text-text-muted">{t('common.no')}</button>
                   </div>
                 ) : (
                   <button onClick={() => setDeleteId(m.id)} className="p-1.5 text-text-muted rounded-lg active:bg-background">
@@ -274,6 +272,7 @@ function GrowthSection({ childId, color }) {
 // ─── Mijlpaal-kaartje ─────────────────────────────────────────────────────────
 
 function MilestoneCard({ milestone, childId }) {
+  const { t } = useTranslation()
   const [value,   setValue]   = useState('')
   const [editing, setEditing] = useState(false)
 
@@ -287,6 +286,7 @@ function MilestoneCard({ milestone, childId }) {
   }
 
   const hasFilled = value.trim().length > 0
+  const milestoneText = t(`milestone_q.${milestone.id}`, { defaultValue: milestone.question })
 
   return (
     <div className={`bg-white rounded-2xl border p-4 transition-all ${hasFilled ? 'border-green/30' : 'border-border-light'}`}>
@@ -298,26 +298,26 @@ function MilestoneCard({ milestone, childId }) {
           }
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-text-dark mb-2">{milestone.question}</p>
+          <p className="text-sm font-medium text-text-dark mb-2">{milestoneText}</p>
           {editing ? (
             <div className="space-y-2">
               <input
                 type="text"
                 value={value}
                 onChange={e => setValue(e.target.value)}
-                placeholder="Bijv. 6 weken, 3 april 2023..."
+                placeholder={t('milestones.input_placeholder')}
                 className="w-full border border-primary rounded-xl px-3 py-2 text-sm text-text-dark focus:outline-none bg-background"
                 autoFocus
               />
               <div className="flex gap-2">
                 <button onClick={handleSave} className="flex-1 bg-primary text-white text-sm font-semibold py-2 rounded-xl">
-                  Opslaan
+                  {t('common.save')}
                 </button>
                 <button
                   onClick={() => { setEditing(false); setValue(getAnswer(childId, 'milestones', null, null, milestone.id)) }}
                   className="px-4 py-2 border border-border-light rounded-xl text-sm text-text-muted"
                 >
-                  Annuleer
+                  {t('common.cancel')}
                 </button>
               </div>
             </div>
@@ -325,7 +325,7 @@ function MilestoneCard({ milestone, childId }) {
             <button onClick={() => setEditing(true)} className="w-full text-left">
               {hasFilled
                 ? <p className="text-sm text-teal font-medium">{value}</p>
-                : <p className="text-sm text-text-muted italic">Tik om in te vullen...</p>
+                : <p className="text-sm text-text-muted italic">{t('milestones.fill_placeholder')}</p>
               }
             </button>
           )}
@@ -338,6 +338,7 @@ function MilestoneCard({ milestone, childId }) {
 // ─── Hoofdpagina ──────────────────────────────────────────────────────────────
 
 export default function Milestones() {
+  const { t } = useTranslation()
   const [children,        setChildren]        = useState([])
   const [selectedChildId, setSelectedChildId] = useState(null)
 
@@ -359,9 +360,9 @@ export default function Milestones() {
   return (
     <div className="min-h-screen bg-background pb-24 page-enter">
       <div className="bg-white border-b border-border-light px-5 pt-12 pb-5">
-        <p className="text-text-muted text-sm mb-0.5">Bijzondere momenten</p>
+        <p className="text-text-muted text-sm mb-0.5">{t('milestones.subtitle')}</p>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
-          Mijlpalen <Star size={20} className="text-yellow" />
+          {t('milestones.title')} <Star size={20} className="text-yellow" />
         </h1>
 
         {children.length > 1 && (
@@ -388,24 +389,23 @@ export default function Milestones() {
         {!selectedChild ? (
           <div className="text-center py-12">
             <p className="text-4xl mb-3">⭐</p>
-            <p className="font-semibold text-text-dark">Geen kinderen gevonden</p>
+            <p className="font-semibold text-text-dark">{t('milestones.none')}</p>
           </div>
         ) : (
           <>
-            {/* Kind-header */}
             <div className="flex items-center gap-3 mb-5">
               <ChildAvatar child={selectedChild} size="lg" />
               <div>
                 <p className="font-bold text-text-dark text-lg">{selectedChild.name}</p>
-                <p className="text-sm text-text-muted">{filledMilestones} van {MILESTONES.length} mijlpalen ingevuld</p>
+                <p className="text-sm text-text-muted">
+                  {t('milestones.filled', { filled: filledMilestones, total: MILESTONES.length })}
+                </p>
               </div>
             </div>
 
-            {/* Groeicurve */}
             <GrowthSection childId={selectedChildId} color={selectedChild.color} />
 
-            {/* Mijlpalen */}
-            <h2 className="font-bold text-text-dark mt-6 mb-1">Eerste keer dat ik...</h2>
+            <h2 className="font-bold text-text-dark mt-6 mb-1">{t('milestones.first_time')}</h2>
             <div className="h-1.5 bg-border-light rounded-full mb-4">
               <div
                 className="h-full rounded-full transition-all"

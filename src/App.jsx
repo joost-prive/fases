@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { isOnboardingComplete } from './utils/storage'
 import Navigation from './components/Navigation'
@@ -13,13 +14,13 @@ import Milestones from './pages/Milestones'
 import Birthday from './pages/Birthday'
 import Settings from './pages/Settings'
 
-// Laadscherm terwijl Firebase auth-status wordt bepaald
 function LoadingScreen() {
+  const { t } = useTranslation()
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center flex flex-col items-center gap-3">
         <AppLogo size={48} />
-        <p className="text-text-muted text-sm">Laden…</p>
+        <p className="text-text-muted text-sm">{t('app.loading')}</p>
       </div>
     </div>
   )

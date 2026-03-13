@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useParams } from 'react-router-dom'
 import { ChevronDown, ChevronUp, Check, Camera, X, Loader2, Mic, MicOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   getChildren, getAnswer, saveAnswer, getMonthAnswersAllYears,
   getQuestionPhotoUrl, saveQuestionPhotoUrl, clearQuestionPhotoUrl,
@@ -13,6 +14,7 @@ import ChildAvatar from '../components/ChildAvatar'
 
 // ─── Vorige-jaren antwoorden ──────────────────────────────────────────────────
 function PreviousAnswers({ childId, month, questionId, currentYear }) {
+  const { t } = useTranslation()
   const allYears = getMonthAnswersAllYears(childId, month)
   const entries = Object.entries(allYears)
     .filter(([year, answers]) => parseInt(year) !== currentYear && answers[questionId])
@@ -20,7 +22,7 @@ function PreviousAnswers({ childId, month, questionId, currentYear }) {
   if (entries.length === 0) return null
   return (
     <div className="mt-3 space-y-2">
-      <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">Vorige jaren</p>
+      <p className="text-xs font-semibold text-text-muted uppercase tracking-wide">{t('questions.prev_years')}</p>
       {entries.map(([year, answers]) => (
         <div key={year} className="bg-teal/5 border border-teal/20 rounded-xl px-3 py-2.5">
           <p className="text-xs font-semibold text-teal mb-1">{year}</p>
@@ -33,13 +35,13 @@ function PreviousAnswers({ childId, month, questionId, currentYear }) {
 
 // ─── Compact foto-rij per vraag ───────────────────────────────────────────────
 function QuestionPhotoRow({ childId, year, month, questionId }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const inputRef = useRef(null)
   const [url, setUrl] = useState(() => getQuestionPhotoUrl(childId, year, month, questionId))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Sync bij wisselen van vraag/maand/jaar/kind
   useEffect(() => {
     setUrl(getQuestionPhotoUrl(childId, year, month, questionId))
     setError('')
@@ -48,7 +50,7 @@ function QuestionPhotoRow({ childId, year, month, questionId }) {
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file || !user) return
-    if (file.size > 15 * 1024 * 1024) { setError('Max 15 MB'); return }
+    if (file.size > 15 * 1024 * 1024) { setError(t('questions.max_size')); return }
     setLoading(true)
     setError('')
     try {
@@ -56,7 +58,7 @@ function QuestionPhotoRow({ childId, year, month, questionId }) {
       saveQuestionPhotoUrl(childId, year, month, questionId, downloadUrl)
       setUrl(downloadUrl)
     } catch (err) {
-      setError('Upload mislukt')
+      setError(t('questions.upload_failed'))
       console.error(err)
     } finally {
       setLoading(false)
@@ -80,7 +82,6 @@ function QuestionPhotoRow({ childId, year, month, questionId }) {
       />
 
       {url ? (
-        /* Thumbnail met vervang- en verwijder-knop */
         <div className="relative inline-block">
           <img
             src={url}
@@ -97,14 +98,12 @@ function QuestionPhotoRow({ childId, year, month, questionId }) {
               <button
                 onClick={() => inputRef.current?.click()}
                 className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-black/55 flex items-center justify-center"
-                title="Foto vervangen"
               >
                 <Camera size={12} className="text-white" />
               </button>
               <button
                 onClick={handleDelete}
                 className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/55 flex items-center justify-center"
-                title="Foto verwijderen"
               >
                 <X size={12} className="text-white" />
               </button>
@@ -112,7 +111,6 @@ function QuestionPhotoRow({ childId, year, month, questionId }) {
           )}
         </div>
       ) : (
-        /* Subtiele upload-knop */
         <button
           onClick={() => inputRef.current?.click()}
           disabled={loading}
@@ -121,7 +119,7 @@ function QuestionPhotoRow({ childId, year, month, questionId }) {
           {loading
             ? <Loader2 size={13} className="animate-spin" />
             : <Camera size={13} />}
-          <span>Foto toevoegen</span>
+          <span>{t('questions.add_photo')}</span>
         </button>
       )}
 
@@ -135,6 +133,7 @@ const isSpeechSupported = typeof window !== 'undefined' &&
   !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 
 function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
+  const { t, i18n } = useTranslation()
   const [value, setValue] = useState('')
   const [listening, setListening] = useState(false)
   const [interimText, setInterimText] = useState('')
@@ -144,7 +143,6 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
     setValue(getAnswer(childId, 'monthly', year, month, question.id))
   }, [childId, month, year, question.id])
 
-  // Stop opname als kaart dichtgaat
   useEffect(() => {
     if (!isOpen) {
       recognitionRef.current?.abort()
@@ -153,7 +151,6 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
     }
   }, [isOpen])
 
-  // Cleanup bij unmount
   useEffect(() => () => recognitionRef.current?.abort(), [])
 
   const handleChange = (e) => {
@@ -161,7 +158,6 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
     saveAnswer(childId, 'monthly', year, month, question.id, e.target.value)
   }
 
-  // Voeg herkende tekst toe aan bestaande waarde
   const appendText = (text) => {
     setValue(prev => {
       const spacer = prev && !prev.endsWith(' ') && !prev.endsWith('\n') ? ' ' : ''
@@ -171,23 +167,26 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
     })
   }
 
+  // Speech language follows app language
+  const speechLang = { nl: 'nl-NL', en: 'en-US', de: 'de-DE' }[i18n.language] || 'nl-NL'
+
   const startListening = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SR) return
     const r = new SR()
-    r.lang = 'nl-NL'
+    r.lang = speechLang
     r.continuous = true
     r.interimResults = true
 
     r.onresult = (e) => {
       let interim = ''
       for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript
+        const text = e.results[i][0].transcript
         if (e.results[i].isFinal) {
-          appendText(t)
+          appendText(text)
           setInterimText('')
         } else {
-          interim += t
+          interim += text
         }
       }
       setInterimText(interim)
@@ -208,6 +207,9 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
   const hasAnswer = value.trim().length > 0
   const hasPhoto  = !!getQuestionPhotoUrl(childId, year, month, question.id)
 
+  // Question text: translated if available, else fallback to Dutch
+  const questionText = t(`monthly.${month}.${question.id}`, { defaultValue: question.question })
+
   return (
     <div className={`bg-white rounded-2xl border transition-all overflow-hidden ${isOpen ? 'border-primary shadow-sm' : 'border-border-light'}`}>
       <button className="w-full flex items-start gap-3 p-4 text-left" onClick={onToggle}>
@@ -217,7 +219,7 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
             : <span className="text-xs text-text-muted font-medium">{question.id}</span>}
         </div>
         <p className={`flex-1 text-sm leading-snug font-medium ${isOpen ? 'text-primary' : 'text-text-dark'}`}>
-          {question.question}
+          {questionText}
         </p>
         <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
           {hasPhoto && !isOpen && <Camera size={13} className="text-text-muted" />}
@@ -227,12 +229,11 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
 
       {isOpen && (
         <div className="px-4 pb-4">
-          {/* Textarea + microfoon-knop */}
           <div className="relative">
             <textarea
               value={value}
               onChange={handleChange}
-              placeholder={listening ? 'Spreek nu…' : 'Schrijf hier je antwoord…'}
+              placeholder={listening ? t('questions.listening_placeholder') : t('questions.answer_placeholder')}
               rows={4}
               autoFocus={!listening}
               className={`w-full border rounded-xl px-3 py-2.5 pr-9 text-sm text-text-dark placeholder-text-muted focus:outline-none bg-background resize-none transition-colors ${
@@ -246,14 +247,13 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
                 className={`absolute bottom-2.5 right-2.5 w-6 h-6 rounded-full flex items-center justify-center transition-all ${
                   listening ? 'text-rose animate-pulse' : 'text-text-muted hover:text-primary'
                 }`}
-                title={listening ? 'Stop opname' : 'Inspreken (Nederlands)'}
+                title={listening ? t('questions.mic_stop') : t('questions.mic_start')}
               >
                 {listening ? <MicOff size={14} /> : <Mic size={14} />}
               </button>
             )}
           </div>
 
-          {/* Live preview tijdens inspreken */}
           {interimText && (
             <p className="mt-1 text-xs text-text-muted italic px-1">{interimText}…</p>
           )}
@@ -268,6 +268,7 @@ function QuestionCard({ question, childId, month, year, isOpen, onToggle }) {
 
 // ─── Hoofdpagina ──────────────────────────────────────────────────────────────
 export default function MonthlyQuestions() {
+  const { t } = useTranslation()
   const [params, setParams] = useSearchParams()
   const { month: monthParam } = useParams()
 
@@ -286,7 +287,6 @@ export default function MonthlyQuestions() {
     if (!selectedChildId && all.length > 0) setSelectedChildId(all[0].id)
   }, [])
 
-  // Reset open question when month/year/child changes
   useEffect(() => { setOpenQuestion(null) }, [selectedMonth, selectedYear, selectedChildId])
 
   const selectedChild = children.find(c => c.id === selectedChildId)
@@ -304,11 +304,9 @@ export default function MonthlyQuestions() {
 
   return (
     <div className="min-h-screen bg-background pb-24 page-enter">
-      {/* Header met dropdowns */}
       <div className="bg-white border-b border-border-light px-5 pt-12 pb-4 sticky top-0 z-40">
-        <p className="text-text-muted text-sm mb-1">Maandelijkse vragen</p>
+        <p className="text-text-muted text-sm mb-1">{t('questions.subtitle')}</p>
 
-        {/* Maand + Jaar dropdowns */}
         <div className="flex gap-2 mb-3">
           <select
             value={selectedMonth}
@@ -316,7 +314,7 @@ export default function MonthlyQuestions() {
             className="flex-1 bg-background border border-border-light rounded-xl px-3 py-2 text-sm font-semibold text-text-dark focus:outline-none focus:border-primary appearance-none"
           >
             {MONTHS.map(m => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m} value={m}>{t(`months.${m}`)}</option>
             ))}
           </select>
           <select
@@ -330,7 +328,6 @@ export default function MonthlyQuestions() {
           </select>
         </div>
 
-        {/* Kind-tabs */}
         {children.length > 1 && (
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             {children.map(child => (
@@ -354,7 +351,6 @@ export default function MonthlyQuestions() {
         )}
       </div>
 
-      {/* Voortgangsbalk */}
       {questions.length > 0 && (
         <div className="h-1 bg-border-light">
           <div
@@ -367,7 +363,6 @@ export default function MonthlyQuestions() {
         </div>
       )}
 
-      {/* Vragen */}
       <div className="px-5 py-4">
         {selectedChild && (
           <div className="flex items-center justify-between mb-4">
@@ -375,7 +370,9 @@ export default function MonthlyQuestions() {
               <ChildAvatar child={selectedChild} size="md" />
               <div>
                 <p className="font-semibold text-text-dark">{selectedChild.name}</p>
-                <p className="text-xs text-text-muted">{questions.length} vragen · {filledCount} ingevuld</p>
+                <p className="text-xs text-text-muted">
+                  {t('questions.count', { total: questions.length, filled: filledCount })}
+                </p>
               </div>
             </div>
           </div>
@@ -384,9 +381,9 @@ export default function MonthlyQuestions() {
         {questions.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-4xl mb-3">🌱</p>
-            <p className="font-semibold text-text-dark mb-1">Geen vragen voor deze maand</p>
+            <p className="font-semibold text-text-dark mb-1">{t('questions.none_title')}</p>
             <p className="text-sm text-text-muted">
-              {selectedChild ? `Voor ${selectedChild.name} zijn er in ${selectedMonth} geen vragen die bij de leeftijd passen.` : ''}
+              {selectedChild ? t('questions.none_desc', { name: selectedChild.name, month: t(`months.${selectedMonth}`) }) : ''}
             </p>
           </div>
         ) : (
@@ -408,9 +405,13 @@ export default function MonthlyQuestions() {
         {filledCount === questions.length && questions.length > 0 && (
           <div className="mt-6 bg-green/10 border border-green/30 rounded-3xl p-5 text-center">
             <p className="text-2xl mb-2">🎉</p>
-            <p className="font-bold text-text-dark mb-1">Alle vragen ingevuld!</p>
+            <p className="font-bold text-text-dark mb-1">{t('questions.all_done_title')}</p>
             <p className="text-sm text-text-muted">
-              {selectedMonth} {selectedYear} is compleet voor {selectedChild?.name}.
+              {t('questions.all_done_desc', {
+                month: t(`months.${selectedMonth}`),
+                year: selectedYear,
+                name: selectedChild?.name
+              })}
             </p>
           </div>
         )}

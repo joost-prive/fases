@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Gift, ChevronDown, ChevronUp, Check } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getChildren, getAnswer, saveAnswer } from '../utils/storage'
 import { filterBirthdayQuestions, getAgeAtDate } from '../utils/ageUtils'
 import { BIRTHDAY_QUESTIONS } from '../data/questions'
 import ChildAvatar from '../components/ChildAvatar'
 
 function QuestionCard({ question, childId, year, isOpen, onToggle }) {
+  const { t } = useTranslation()
   const [value, setValue] = useState('')
 
   useEffect(() => {
@@ -21,6 +23,7 @@ function QuestionCard({ question, childId, year, isOpen, onToggle }) {
   }
 
   const hasAnswer = value.trim().length > 0
+  const questionText = t(`birthday_q.${question.id}`, { defaultValue: question.question })
 
   return (
     <div className={`bg-white rounded-2xl border transition-all overflow-hidden ${isOpen ? 'border-yellow shadow-sm' : 'border-border-light'}`}>
@@ -31,8 +34,8 @@ function QuestionCard({ question, childId, year, isOpen, onToggle }) {
         <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${hasAnswer ? 'bg-green' : 'bg-background border border-border-light'}`}>
           {hasAnswer ? <Check size={13} className="text-white" strokeWidth={3} /> : <span className="text-xs text-text-muted font-medium">{question.id}</span>}
         </div>
-        <p className={`flex-1 text-sm font-medium leading-snug ${isOpen ? 'text-text-dark' : 'text-text-dark'}`}>
-          {question.question}
+        <p className="flex-1 text-sm font-medium leading-snug text-text-dark">
+          {questionText}
         </p>
         {isOpen ? <ChevronUp size={16} className="text-text-muted flex-shrink-0 mt-0.5" /> : <ChevronDown size={16} className="text-text-muted flex-shrink-0 mt-0.5" />}
       </button>
@@ -42,7 +45,7 @@ function QuestionCard({ question, childId, year, isOpen, onToggle }) {
           <textarea
             value={value}
             onChange={handleChange}
-            placeholder="Schrijf hier je antwoord..."
+            placeholder={t('birthday.placeholder')}
             rows={4}
             autoFocus
             className="w-full border border-border-light rounded-xl px-3 py-2.5 text-sm text-text-dark placeholder-text-muted focus:outline-none focus:border-yellow bg-background resize-none"
@@ -54,6 +57,7 @@ function QuestionCard({ question, childId, year, isOpen, onToggle }) {
 }
 
 export default function Birthday() {
+  const { t } = useTranslation()
   const [params] = useSearchParams()
   const navigate = useNavigate()
   const childId = params.get('childId')
@@ -86,9 +90,11 @@ export default function Birthday() {
           </button>
           <div>
             <h1 className="font-bold text-text-dark text-lg flex items-center gap-2">
-              Verjaardag <Gift size={18} className="text-yellow" />
+              {t('birthday.title')} <Gift size={18} className="text-yellow" />
             </h1>
-            <p className="text-text-muted text-xs">{child.name} wordt {age} — {year}</p>
+            <p className="text-text-muted text-xs">
+              {t('birthday.subtitle', { name: child.name, age, year })}
+            </p>
           </div>
         </div>
       </div>
@@ -98,7 +104,9 @@ export default function Birthday() {
           <ChildAvatar child={child} size="lg" />
           <div>
             <p className="font-bold text-text-dark">{child.name}</p>
-            <p className="text-sm text-text-muted">{filled} van {questions.length} ingevuld</p>
+            <p className="text-sm text-text-muted">
+              {t('birthday.filled', { filled, total: questions.length })}
+            </p>
           </div>
         </div>
 

@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Settings as SettingsIcon, Bell, Trash2, Download, Info, LogOut } from 'lucide-react'
+import { Settings as SettingsIcon, Bell, Trash2, Download, Info, LogOut, Globe } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { getSettings, saveSettings, getData } from '../utils/storage'
 import { logout } from '../utils/authService'
 import { useAuth } from '../contexts/AuthContext'
+import { setLanguage } from '../i18n'
 
 function Toggle({ checked, onChange }) {
   return (
@@ -28,6 +30,7 @@ function SettingRow({ label, description, children }) {
 }
 
 export default function Settings() {
+  const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const [settings, setSettings] = useState(getSettings())
   const [exportDone, setExportDone] = useState(false)
@@ -59,32 +62,62 @@ export default function Settings() {
   }
 
   const REMINDER_DAYS = [
-    { value: 1, label: '1e van de maand' },
-    { value: 7, label: '7e van de maand' },
-    { value: 15, label: '15e van de maand' },
+    { value: 1,  label: t('settings.reminder_day_1') },
+    { value: 7,  label: t('settings.reminder_day_7') },
+    { value: 15, label: t('settings.reminder_day_15') },
+  ]
+
+  const LANGUAGES = [
+    { code: 'nl', label: t('settings.language_nl') },
+    { code: 'en', label: t('settings.language_en') },
+    { code: 'de', label: t('settings.language_de') },
   ]
 
   return (
     <div className="min-h-screen bg-background pb-24 page-enter">
       <div className="bg-white border-b border-border-light px-5 pt-12 pb-5">
-        <p className="text-text-muted text-sm mb-0.5">Voorkeuren</p>
+        <p className="text-text-muted text-sm mb-0.5">{t('settings.subtitle')}</p>
         <h1 className="text-2xl font-bold text-text-dark flex items-center gap-2">
-          Instellingen <SettingsIcon size={20} className="text-text-muted" />
+          {t('settings.title')} <SettingsIcon size={20} className="text-text-muted" />
         </h1>
       </div>
 
       <div className="px-5 py-5 space-y-4">
 
-        {/* Notifications */}
+        {/* Taal */}
+        <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Globe size={18} className="text-primary" />
+            <h2 className="font-bold text-text-dark">{t('settings.language_title')}</h2>
+          </div>
+          <p className="text-xs font-semibold text-text-muted mb-2">{t('settings.language_label')}</p>
+          <div className="flex gap-2 flex-wrap">
+            {LANGUAGES.map(lang => (
+              <button
+                key={lang.code}
+                onClick={() => setLanguage(lang.code)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                  i18n.language === lang.code
+                    ? 'bg-primary text-white border-transparent'
+                    : 'text-text-muted border-border-light'
+                }`}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Herinneringen */}
         <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Bell size={18} className="text-primary" />
-            <h2 className="font-bold text-text-dark">Herinneringen</h2>
+            <h2 className="font-bold text-text-dark">{t('settings.reminders_title')}</h2>
           </div>
 
           <SettingRow
-            label="Maandelijkse herinnering"
-            description="Ontvang een melding wanneer nieuwe vragen beschikbaar zijn"
+            label={t('settings.reminder_label')}
+            description={t('settings.reminder_desc')}
           >
             <Toggle
               checked={settings.notificationsEnabled}
@@ -94,7 +127,7 @@ export default function Settings() {
 
           {settings.notificationsEnabled && (
             <div className="pt-2">
-              <p className="text-xs font-semibold text-text-muted mb-2">Herinner mij op</p>
+              <p className="text-xs font-semibold text-text-muted mb-2">{t('settings.reminder_on')}</p>
               <div className="flex gap-2 flex-wrap">
                 {REMINDER_DAYS.map(d => (
                   <button
@@ -110,9 +143,7 @@ export default function Settings() {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-text-muted mt-3">
-                Notificaties werken wanneer de app als PWA is geïnstalleerd op je toestel.
-              </p>
+              <p className="text-xs text-text-muted mt-3">{t('settings.pwa_note')}</p>
             </div>
           )}
         </div>
@@ -121,7 +152,7 @@ export default function Settings() {
         <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Download size={18} className="text-teal" />
-            <h2 className="font-bold text-text-dark">Jouw gegevens</h2>
+            <h2 className="font-bold text-text-dark">{t('settings.data_title')}</h2>
           </div>
 
           <button
@@ -132,19 +163,17 @@ export default function Settings() {
                 : 'bg-teal/5 text-teal border-teal/20 active:bg-teal/10'
             }`}
           >
-            {exportDone ? '✓ Download gestart!' : 'Exporteer als JSON backup'}
+            {exportDone ? t('settings.export_done') : t('settings.export_btn')}
           </button>
 
-          <p className="text-xs text-text-muted mt-3">
-            Al je antwoorden worden lokaal opgeslagen op dit apparaat. Exporteer regelmatig een backup.
-          </p>
+          <p className="text-xs text-text-muted mt-3">{t('settings.export_note')}</p>
         </div>
 
         {/* Danger zone */}
         <div className="bg-white rounded-2xl border border-rose/20 p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Trash2 size={18} className="text-rose" />
-            <h2 className="font-bold text-text-dark">Gegevens verwijderen</h2>
+            <h2 className="font-bold text-text-dark">{t('settings.danger_title')}</h2>
           </div>
 
           {!clearConfirm ? (
@@ -152,24 +181,24 @@ export default function Settings() {
               onClick={() => setClearConfirm(true)}
               className="w-full py-3 rounded-2xl text-sm font-semibold bg-rose/5 text-rose border border-rose/20 active:bg-rose/10"
             >
-              Alle gegevens wissen
+              {t('settings.clear_btn')}
             </button>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-text-dark font-semibold">Weet je het zeker?</p>
-              <p className="text-xs text-text-muted">Alle kinderen, vragen en antwoorden worden permanent verwijderd.</p>
+              <p className="text-sm text-text-dark font-semibold">{t('settings.clear_confirm')}</p>
+              <p className="text-xs text-text-muted">{t('settings.clear_desc')}</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setClearConfirm(false)}
                   className="flex-1 py-2.5 rounded-xl border border-border-light text-sm font-medium text-text-muted"
                 >
-                  Annuleer
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleClearData}
                   className="flex-1 py-2.5 rounded-xl bg-rose text-white text-sm font-semibold"
                 >
-                  Alles wissen
+                  {t('settings.clear_yes')}
                 </button>
               </div>
             </div>
@@ -180,32 +209,29 @@ export default function Settings() {
         <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <LogOut size={18} className="text-text-muted" />
-            <h2 className="font-bold text-text-dark">Account</h2>
+            <h2 className="font-bold text-text-dark">{t('settings.account_title')}</h2>
           </div>
           {user && (
             <p className="text-sm text-text-muted mb-3">
-              Ingelogd als <span className="font-medium text-text-dark">{user.displayName || user.email}</span>
+              {t('settings.logged_in_as', { name: user.displayName || user.email })}
             </p>
           )}
           <button
             onClick={() => logout()}
             className="w-full py-3 rounded-2xl text-sm font-semibold bg-background text-text-dark border border-border-light active:bg-border-light"
           >
-            Uitloggen
+            {t('settings.logout')}
           </button>
         </div>
 
-        {/* About */}
+        {/* Over Fases */}
         <div className="bg-white rounded-2xl border border-border-light p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <Info size={18} className="text-text-muted" />
-            <h2 className="font-bold text-text-dark">Over Fases</h2>
+            <h2 className="font-bold text-text-dark">{t('settings.about_title')}</h2>
           </div>
-          <p className="text-sm text-text-muted leading-relaxed">
-            Fases is een maandboek voor drukke ouders. Geen dagboek, maar een paar vragen per maand —
-            wanneer het jou uitkomt. Het resultaat: een prachtige tijdreis van jouw opgroeiende gezin.
-          </p>
-          <p className="text-xs text-text-muted mt-3">Versie 1.0.0</p>
+          <p className="text-sm text-text-muted leading-relaxed">{t('settings.about_desc')}</p>
+          <p className="text-xs text-text-muted mt-3">{t('settings.version')}</p>
         </div>
       </div>
     </div>

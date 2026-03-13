@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import KidCharacter from '../components/KidCharacter'
 import AppLogo from '../components/AppLogo'
 import {
@@ -10,6 +11,7 @@ import {
 } from '../utils/authService'
 
 export default function Login() {
+  const { t } = useTranslation()
   const [tab, setTab] = useState('login') // 'login' | 'register' | 'reset'
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -20,17 +22,17 @@ export default function Login() {
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
   const handleError = (e) => {
-    const msg = {
-      'auth/user-not-found': 'Geen account gevonden met dit e-mailadres.',
-      'auth/wrong-password': 'Wachtwoord klopt niet.',
-      'auth/invalid-credential': 'E-mail of wachtwoord klopt niet.',
-      'auth/email-already-in-use': 'Dit e-mailadres is al in gebruik.',
-      'auth/weak-password': 'Kies een wachtwoord van minimaal 6 tekens.',
-      'auth/invalid-email': 'Ongeldig e-mailadres.',
-      'auth/popup-closed-by-user': 'Inloggen via Google geannuleerd.',
-      'auth/network-request-failed': 'Geen internetverbinding.',
-    }[e.code] || 'Er ging iets mis. Probeer het opnieuw.'
-    setError(msg)
+    const map = {
+      'auth/user-not-found': t('login.error.user_not_found'),
+      'auth/wrong-password': t('login.error.wrong_password'),
+      'auth/invalid-credential': t('login.error.invalid_credential'),
+      'auth/email-already-in-use': t('login.error.email_in_use'),
+      'auth/weak-password': t('login.error.weak_password'),
+      'auth/invalid-email': t('login.error.invalid_email'),
+      'auth/popup-closed-by-user': t('login.error.popup_closed'),
+      'auth/network-request-failed': t('login.error.network'),
+    }
+    setError(map[e.code] || t('common.error_generic'))
   }
 
   const handleLogin = async (e) => {
@@ -87,7 +89,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-5 py-12">
-      {/* Logo + karakters + header */}
       <div className="mb-8 text-center flex flex-col items-center">
         <div className="flex items-end justify-center gap-3 mb-5">
           <KidCharacter phase="baby"       color="#E07845" width={44} />
@@ -95,31 +96,29 @@ export default function Login() {
           <KidCharacter phase="schoolkind" color="#9B7EC8" width={44} />
         </div>
         <AppLogo size={40} withText className="justify-center mb-1" />
-        <p className="text-text-muted text-sm">Jouw maandboek voor je gezin</p>
+        <p className="text-text-muted text-sm">{t('login.subtitle')}</p>
       </div>
 
       <div className="w-full max-w-sm">
-        {/* Tabs: Inloggen / Registreren */}
         {tab !== 'reset' && (
           <div className="flex bg-white rounded-2xl border border-border-light p-1 mb-5">
-            {['login', 'register'].map(t => (
+            {['login', 'register'].map(tabKey => (
               <button
-                key={t}
-                onClick={() => { setTab(t); setError('') }}
+                key={tabKey}
+                onClick={() => { setTab(tabKey); setError('') }}
                 className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
-                  tab === t
+                  tab === tabKey
                     ? 'bg-primary text-white shadow-sm'
                     : 'text-text-muted'
                 }`}
               >
-                {t === 'login' ? 'Inloggen' : 'Registreren'}
+                {tabKey === 'login' ? t('login.tab_login') : t('login.tab_register')}
               </button>
             ))}
           </div>
         )}
 
         <div className="bg-white rounded-3xl border border-border-light shadow-sm p-6">
-          {/* Foutmelding */}
           {error && (
             <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
               <AlertCircle size={16} className="text-red-500 flex-shrink-0 mt-0.5" />
@@ -127,73 +126,69 @@ export default function Login() {
             </div>
           )}
 
-          {/* INLOGGEN */}
           {tab === 'login' && (
             <form onSubmit={handleLogin} className="space-y-4">
-              <InputField icon={<Mail size={16} />} type="email" placeholder="E-mailadres" value={form.email} onChange={set('email')} required />
+              <InputField icon={<Mail size={16} />} type="email" placeholder={t('login.email')} value={form.email} onChange={set('email')} required />
               <div className="relative">
-                <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Wachtwoord" value={form.password} onChange={set('password')} required />
+                <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder={t('login.password')} value={form.password} onChange={set('password')} required />
                 <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               <button type="submit" disabled={loading} className="w-full bg-primary text-white font-semibold py-3 rounded-2xl shadow-sm disabled:opacity-60 transition-opacity">
-                {loading ? 'Even geduld…' : 'Inloggen'}
+                {loading ? t('login.loading') : t('login.login_btn')}
               </button>
               <button type="button" onClick={() => { setTab('reset'); setError(''); setResetSent(false) }} className="w-full text-sm text-text-muted text-center">
-                Wachtwoord vergeten?
+                {t('login.forgot_password')}
               </button>
             </form>
           )}
 
-          {/* REGISTREREN */}
           {tab === 'register' && (
             <form onSubmit={handleRegister} className="space-y-4">
-              <InputField icon={<User size={16} />} type="text" placeholder="Jouw naam" value={form.name} onChange={set('name')} required />
-              <InputField icon={<Mail size={16} />} type="email" placeholder="E-mailadres" value={form.email} onChange={set('email')} required />
+              <InputField icon={<User size={16} />} type="text" placeholder={t('login.your_name')} value={form.name} onChange={set('name')} required />
+              <InputField icon={<Mail size={16} />} type="email" placeholder={t('login.email')} value={form.email} onChange={set('email')} required />
               <div className="relative">
-                <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder="Wachtwoord (min. 6 tekens)" value={form.password} onChange={set('password')} required />
+                <InputField icon={<Lock size={16} />} type={showPassword ? 'text' : 'password'} placeholder={t('login.password_min')} value={form.password} onChange={set('password')} required />
                 <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               <button type="submit" disabled={loading} className="w-full bg-primary text-white font-semibold py-3 rounded-2xl shadow-sm disabled:opacity-60 transition-opacity">
-                {loading ? 'Account aanmaken…' : 'Account aanmaken'}
+                {loading ? t('login.registering') : t('login.register_btn')}
               </button>
             </form>
           )}
 
-          {/* WACHTWOORD RESET */}
           {tab === 'reset' && (
             <div>
               <button onClick={() => { setTab('login'); setError('') }} className="text-sm text-text-muted mb-4 flex items-center gap-1">
-                ← Terug naar inloggen
+                {t('login.back_to_login')}
               </button>
-              <h2 className="font-bold text-text-dark mb-1">Wachtwoord vergeten?</h2>
-              <p className="text-sm text-text-muted mb-4">Vul je e-mailadres in en we sturen je een resetlink.</p>
+              <h2 className="font-bold text-text-dark mb-1">{t('login.reset_title')}</h2>
+              <p className="text-sm text-text-muted mb-4">{t('login.reset_desc')}</p>
               {resetSent ? (
                 <div className="bg-green/10 border border-green/30 rounded-xl p-4 text-center">
                   <p className="text-2xl mb-2">✉️</p>
-                  <p className="font-semibold text-text-dark text-sm">E-mail verstuurd!</p>
-                  <p className="text-xs text-text-muted mt-1">Controleer je inbox (en spammap).</p>
+                  <p className="font-semibold text-text-dark text-sm">{t('login.reset_sent_title')}</p>
+                  <p className="text-xs text-text-muted mt-1">{t('login.reset_sent_desc')}</p>
                 </div>
               ) : (
                 <form onSubmit={handleReset} className="space-y-4">
-                  <InputField icon={<Mail size={16} />} type="email" placeholder="E-mailadres" value={form.email} onChange={set('email')} required />
+                  <InputField icon={<Mail size={16} />} type="email" placeholder={t('login.email')} value={form.email} onChange={set('email')} required />
                   <button type="submit" disabled={loading} className="w-full bg-primary text-white font-semibold py-3 rounded-2xl shadow-sm disabled:opacity-60">
-                    {loading ? 'Versturen…' : 'Resetlink sturen'}
+                    {loading ? t('login.reset_sending') : t('login.reset_send')}
                   </button>
                 </form>
               )}
             </div>
           )}
 
-          {/* Google-knop (login + register) */}
           {tab !== 'reset' && (
             <>
               <div className="flex items-center gap-3 my-4">
                 <div className="flex-1 h-px bg-border-light" />
-                <span className="text-xs text-text-muted">of</span>
+                <span className="text-xs text-text-muted">{t('common.or')}</span>
                 <div className="flex-1 h-px bg-border-light" />
               </div>
               <button
@@ -207,7 +202,7 @@ export default function Login() {
                   <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
                   <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
                 </svg>
-                Doorgaan met Google
+                {t('login.google_btn')}
               </button>
             </>
           )}
